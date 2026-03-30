@@ -32,137 +32,154 @@ void initState() {
   super.initState();
   getMeja();
 }
+  
   /// FORM TAMBAH / EDIT
   void formMeja({int? index}) {
-
     bool isEdit = index != null;
 
-    TextEditingController nomor =
-        TextEditingController(
-            text: isEdit ? meja[index]["nomor_meja"] : "");
+    TextEditingController nomor = TextEditingController(
+        text: isEdit ? meja[index]["nomor_meja"].toString() : "");
 
-    String status =
-        isEdit ? meja[index]["status"] : "kosong";
+    String status = isEdit ? meja[index]["status"] : "kosong";
 
-    showDialog(
-
+    showModalBottomSheet(
       context: context,
-
-      builder: (context){
-
-        return AlertDialog(
-
-          title: Text(
-              isEdit ? "Edit Meja" : "Tambah Meja"
-          ),
-
-          content: Column(
-
-            mainAxisSize: MainAxisSize.min,
-
-            children: [
-
-              TextField(
-                controller: nomor,
-                decoration: const InputDecoration(
-                  labelText: "Nomor Meja",
-                  border: OutlineInputBorder(),
-                ),
+      isScrollControlled: true, // Agar keyboard tidak menutupi input
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (context) {
+        return StatefulBuilder( // Menggunakan StatefulBuilder agar dropdown bisa berubah saat diklik
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom, // Menyesuaikan keyboard
+                left: 20,
+                right: 20,
+                top: 25,
               ),
-
-              const SizedBox(height:15),
-
-              DropdownButtonFormField(
-
-                value: status,
-
-                items: const [
-
-                  DropdownMenuItem(
-                      value:"kosong",
-                      child: Text("Kosong")
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    isEdit ? "Edit Meja" : "Tambah Meja",
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-
-                  DropdownMenuItem(
-                      value:"terisi",
-                      child: Text("Terisi")
+                  const SizedBox(height: 25),
+                  
+                  // INPUT NOMOR MEJA
+                  TextField(
+                    controller: nomor,
+                    decoration: InputDecoration(
+                      hintText: "Nomor Meja",
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 15),
 
+                  // DROPDOWN STATUS
+                  DropdownButtonFormField(
+                    value: status,
+                    items: const [
+                      DropdownMenuItem(value: "kosong", child: Text("Kosong")),
+                      DropdownMenuItem(value: "terisi", child: Text("Terisi")),
+                    ],
+                    onChanged: (value) {
+                      setModalState(() {
+                        status = value.toString();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: const BorderSide(color: Colors.grey),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+
+               // TOMBOL AKSI
+Row(
+  children: [
+    // Tombol Simpan / Update
+    Expanded(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xffe53935),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        onPressed: () async {
+          if (nomor.text.isEmpty) return;
+          if (isEdit) {
+            await supabase.from('meja').update({
+              'nomor_meja': nomor.text,
+              'status': status
+            }).eq('id', meja[index]["id"]);
+          } else {
+            await supabase.from('meja').insert({
+              'nomor_meja': nomor.text,
+              'status': status
+            });
+          }
+          if (mounted) Navigator.pop(context);
+          getMeja();
+        },
+        child: Text(
+          isEdit ? "Update" : "Simpan",
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold
+          ),
+        ),
+      ),
+    ),
+    const SizedBox(width: 15),
+    // Tombol Batal
+    Expanded(
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+            side: const BorderSide(color: Colors.transparent)
+          ),
+        ),
+        onPressed: () => Navigator.pop(context),
+        child: const Text(
+          "Batal",
+          style: TextStyle(fontSize: 18),
+        ),
+      ),
+    ),
+  ],
+),
+                  const SizedBox(height: 20),
                 ],
-
-                onChanged: (value){
-
-                  status = value.toString();
-
-                },
-
-                decoration: const InputDecoration(
-                  labelText: "Status",
-                  border: OutlineInputBorder(),
-                ),
-
-              )
-
-            ],
-
-          ),
-
-          actions: [
-
-            TextButton(
-
-              onPressed: (){
-                Navigator.pop(context);
-              },
-
-              child: const Text("Batal"),
-
-            ),
-
-            ElevatedButton(
-
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
               ),
-
-            onPressed: () async {
-
-  if (nomor.text.isEmpty) return;
-
-  if (isEdit) {
-    // UPDATE
-    await supabase.from('meja').update({
-      'nomor_meja': nomor.text,
-      'status': status
-    }).eq('id', meja[index]["id"]);
-  } else {
-    // INSERT
-    await supabase.from('meja').insert({
-      'nomor_meja': nomor.text,
-      'status': status
-    });
-  }
-
-  Navigator.pop(context);
-  getMeja(); // refresh data
-},
-
-              child: Text(
-                  isEdit ? "Update" : "Simpan"
-              ),
-
-            )
-
-          ],
-
+            );
+          }
         );
-
-      }
-
+      },
     );
-
   }
-
  void toggleStatus(int index) async {
 
   String newStatus =
@@ -179,13 +196,92 @@ void initState() {
 
 
  void hapusMeja(int index) async {
+  bool? konfirmasi = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          left: 20,
+          right: 20,
+          top: 25,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "Hapus Meja",
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Text(
+              "Apakah Anda yakin ingin menghapus Meja ${meja[index]["nomor_meja"]}?",
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 25),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: const BorderSide(color: Colors.grey),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text(
+                      "Batal",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xffe53935),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text(
+                      "Hapus",
+                      style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      );
+    },
+  );
 
-  await supabase
-      .from('meja')
-      .delete()
-      .eq('id', meja[index]["id"]);
+  if (konfirmasi == true) {
+    await supabase
+        .from('meja')
+        .delete()
+        .eq('id', meja[index]["id"]);
 
-  getMeja();
+    getMeja();
+  }
 }
 
   @override
@@ -214,9 +310,9 @@ void initState() {
 
         backgroundColor: Colors.red,
 
-        icon: const Icon(Icons.add),
+        icon: const Icon(Icons.add,color: Colors.white,),
 
-        label: const Text("Tambah Meja"),
+        label:  Text("Tambah Meja",style: TextStyle(color: Colors.white),),
 
       ),
 
@@ -340,7 +436,7 @@ Padding(
                     data["status"] == "terisi";
 
                 return Card(
-                color: Color.fromARGB(0, 255, 124, 124),
+                color: Color.fromARGB(255, 239, 218, 218),
                   margin: const EdgeInsets.symmetric(
                       horizontal:12,
                       vertical:6
