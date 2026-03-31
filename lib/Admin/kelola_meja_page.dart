@@ -122,22 +122,42 @@ Row(
             borderRadius: BorderRadius.circular(30),
           ),
         ),
-        onPressed: () async {
-          if (nomor.text.isEmpty) return;
-          if (isEdit) {
-            await supabase.from('meja').update({
-              'nomor_meja': nomor.text,
-              'status': status
-            }).eq('id', meja[index]["id"]);
-          } else {
-            await supabase.from('meja').insert({
-              'nomor_meja': nomor.text,
-              'status': status
-            });
-          }
-          if (mounted) Navigator.pop(context);
-          getMeja();
-        },
+       onPressed: () async {
+  if (nomor.text.isEmpty) return;
+
+  // Cek apakah nomor meja sudah ada
+  final cekMeja = await supabase
+      .from('meja')
+      .select()
+      .eq('nomor_meja', nomor.text);
+
+  // Jika edit, abaikan nomor meja sendiri
+  if (cekMeja.isNotEmpty && (!isEdit || cekMeja[0]["id"] != meja[index]["id"])) {
+    // Tampilkan pesan error
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Nomor meja ${nomor.text} sudah ada!"),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return; // hentikan proses insert/update
+  }
+
+  if (isEdit) {
+    await supabase.from('meja').update({
+      'nomor_meja': nomor.text,
+      'status': status
+    }).eq('id', meja[index]["id"]);
+  } else {
+    await supabase.from('meja').insert({
+      'nomor_meja': nomor.text,
+      'status': status
+    });
+  }
+
+  if (mounted) Navigator.pop(context);
+  getMeja();
+},
         child: Text(
           isEdit ? "Update" : "Simpan",
           style: const TextStyle(

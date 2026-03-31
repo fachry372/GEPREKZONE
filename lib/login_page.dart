@@ -20,67 +20,73 @@ class _LoginPageState extends State<LoginPage> {
 
   bool isLoading = false;
 
-  Future<void> login() async {
-    if (username.text.isEmpty || password.text.isEmpty) {
+ Future<void> login() async {
+  if (username.text.isEmpty || password.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Username & Password tidak boleh kosong")),
+    );
+    return;
+  }
+
+  setState(() => isLoading = true);
+
+  try {
+    final supabase = Supabase.instance.client;
+
+    final res = await supabase.rpc('login_user', params: {
+      'p_username': username.text.trim(),
+      'p_password': password.text,
+    });
+
+    if (res.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username & Password wajib diisi")),
+        const SnackBar(content: Text("Username atau password salah")),
       );
+      setState(() => isLoading = false);
       return;
     }
 
-    setState(() => isLoading = true);
+    final user = res[0];
 
-    try {
-      final supabase = Supabase.instance.client;
-
-     final response = await supabase.rpc(
-  'login_user',
-  params: {
-    'p_username': username.text,
-    'p_password': password.text,
-  },
-);
-print(response);
-      if (response.isNotEmpty) {
-        final user = response[0];
-        String role = user['role'];
-
-        Widget page;
-
-        switch (role) {
-          case 'admin':
-            page =  AdminPage();
-            break;
-          case 'kasir':
-            page =  KasirHomepage();
-            break;
-          case 'owner':
-            page =  OwnerPage();
-            break;
-          default:
-            throw Exception("Role tidak dikenali");
-        }
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => page),
-        );
-
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Username atau password salah")),
-        );
-      }
-
-    } catch (e) {
+    // ✅ CEK STATUS
+    if (user['status'] != 'aktif') {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        const SnackBar(content: Text("User tidak aktif")),
       );
+      setState(() => isLoading = false);
+      return;
     }
 
-    setState(() => isLoading = false);
+    String role = user['role'];
+
+    Widget page;
+    switch (role) {
+      case 'admin':
+        page = AdminPage();
+        break;
+      case 'kasir':
+        page = KasirHomepage();
+        break;
+      case 'owner':
+        page = OwnerPage();
+        break;
+      default:
+        throw Exception("Role tidak dikenali");
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => page),
+    );
+
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error: $e")),
+    );
   }
 
+  setState(() => isLoading = false);
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
