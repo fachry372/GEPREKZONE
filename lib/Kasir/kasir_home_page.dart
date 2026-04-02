@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:geprekzone/pilihtipe_page.dart';
+import 'package:geprekzone/Kasir/pilihtipe_page.dart';
 import '../login_page.dart';
 
 class KasirHomepage extends StatelessWidget {

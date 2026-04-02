@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Admin/kelola_meja_page.dart';
-import 'package:geprekzone/Admin/kelola_produk_page.dart';
-import 'package:geprekzone/Admin/kelola_user_page.dart';
+import 'package:geprekzone/Admin/Meja/kelola_meja_page.dart';
+import 'package:geprekzone/Admin/Menu/kelola_produk_page.dart';
+import 'package:geprekzone/Admin/Users/kelola_user_page.dart';
 import 'package:geprekzone/login_page.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/pilihmeja_page.dart';
-import 'kasir_page.dart';
+import 'package:geprekzone/Kasir/pilihmeja_page.dart';
+import 'Transaksi.dart';
 
 class PilihTipePage extends StatelessWidget {
   const PilihTipePage({super.key});
@@ -12,7 +12,11 @@ class PilihTipePage extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: const Text("Pilih Tipe Pesanan"),
+        centerTitle: true,
+        iconTheme: const IconThemeData(
+    color: Colors.white, 
+  ),
+        title: const Text("Pilih Tipe Pesanan",style: TextStyle(color: Colors.white),),
       ),
 
       body: Center(
@@ -20,7 +24,7 @@ class PilihTipePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
 
-            /// DINE IN
+            
             tipeButton(
               context,
               "Dine In",
@@ -48,7 +52,7 @@ class PilihTipePage extends StatelessWidget {
                Navigator.push(
   context,
   MaterialPageRoute(
-    builder: (context) => const KasirPage(
+    builder: (context) => const TransaksiPage(
       tipePesanan: "Take Away",
       meja: "-",
     ),

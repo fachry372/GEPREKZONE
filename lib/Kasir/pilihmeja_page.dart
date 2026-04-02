@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'kasir_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'Transaksi.dart';
 
-class PilihMejaPage extends StatelessWidget {
+class PilihMejaPage extends StatefulWidget {
 
   final String tipePesanan;
 
@@ -10,18 +11,34 @@ class PilihMejaPage extends StatelessWidget {
     required this.tipePesanan,
   });
 
-  final List meja = const [
-    {"nama": "Meja 1", "status": "kosong"},
-    {"nama": "Meja 2", "status": "terisi"},
-    {"nama": "Meja 3", "status": "kosong"},
-    {"nama": "Meja 4", "status": "terisi"},
-    {"nama": "Meja 5", "status": "kosong"},
-    {"nama": "Meja 6", "status": "kosong"},
-    {"nama": "Meja 7", "status": "terisi"},
-    {"nama": "Meja 8", "status": "kosong"},
-    {"nama": "Meja 9", "status": "kosong"},
-  ];
+  @override
+  State<PilihMejaPage> createState() => _PilihMejaPageState();
+}
 
+class _PilihMejaPageState extends State<PilihMejaPage> {
+
+   final supabase = Supabase.instance.client;
+
+  List<Map<String, dynamic>> meja = [];
+  bool isLoading = true;
+
+  Future<void> getMeja() async {
+    final response = await supabase
+        .from('meja')
+        .select()
+        .order('id', ascending: true);
+
+    setState(() {
+      meja = List<Map<String, dynamic>>.from(response);
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getMeja();
+  }
   @override
   Widget build(BuildContext context) {
 
@@ -29,10 +46,16 @@ class PilihMejaPage extends StatelessWidget {
 
       appBar: AppBar(
         backgroundColor: Colors.red,
-        title: const Text("Pilih Meja"),
+        centerTitle: true,
+        iconTheme: const IconThemeData(
+    color: Colors.white, // ini buat arrow back jadi putih
+  ),
+        title: const Text("Pilih Meja",style: TextStyle(color: Colors.white),),
       ),
 
-      body: GridView.builder(
+      body: isLoading
+    ? const Center(child: CircularProgressIndicator())
+    : GridView.builder(
         padding: const EdgeInsets.all(20),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
@@ -52,9 +75,9 @@ class PilihMejaPage extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => KasirPage(
-                    tipePesanan: tipePesanan,
-                    meja: item["nama"],
+                  builder: (context) => TransaksiPage(
+                    tipePesanan: widget.tipePesanan,
+                    meja: item["id"].toString(),
                   ),
                 ),
               );
@@ -83,7 +106,7 @@ class PilihMejaPage extends StatelessWidget {
     const SizedBox(height: 5),
 
     Text(
-      item["nama"],
+      "Meja ${item["nomor_meja"]}",
       style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 16,

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/berandaowner.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:geprekzone/Admin/admin_page.dart';
 import 'package:geprekzone/Kasir/kasir_home_page.dart';
 
@@ -38,47 +38,49 @@ class _LoginPageState extends State<LoginPage> {
       'p_password': password.text,
     });
 
+   
+
     if (res.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Username atau password salah")),
-      );
-      setState(() => isLoading = false);
-      return;
-    }
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("Username atau password salah")),
+  );
+  setState(() => isLoading = false);
+  return;
+}
 
-    final user = res[0];
+final user = res[0];
 
-    // ✅ CEK STATUS
-    if (user['status'] != 'aktif') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("User tidak aktif")),
-      );
-      setState(() => isLoading = false);
-      return;
-    }
+if (user['status'] != 'aktif') {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text("User tidak aktif")),
+  );
+  setState(() => isLoading = false);
+  return;
+}
 
-    String role = user['role'];
 
-    Widget page;
-    switch (role) {
-      case 'admin':
-        page = AdminPage();
-        break;
-      case 'kasir':
-        page = KasirHomepage();
-        break;
-      case 'owner':
-        page = OwnerPage();
-        break;
-      default:
-        throw Exception("Role tidak dikenali");
-    }
+UserSession.fromJson(user);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
+String role = user['role'];
+Widget page;
+switch (role) {
+  case 'admin':
+    page = AdminPage();
+    break;
+  case 'kasir':
+    page = KasirHomepage();
+    break;
+  case 'owner':
+    page = OwnerPage();
+    break;
+  default:
+    throw Exception("Role tidak dikenali");
+}
 
+Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(builder: (_) => page),
+);
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text("Error: $e")),
