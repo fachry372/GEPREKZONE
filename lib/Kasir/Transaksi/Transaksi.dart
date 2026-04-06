@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Kasir/struk.dart';
+import 'package:geprekzone/Kasir/Transaksi/struk.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geprekzone/auth/session.dart';
 
@@ -90,12 +90,23 @@ if (userId == null) {
 
 final trx = await supabase.from('transactions').insert({
   "kode_transaksi": kode,
-  "id_users": userId, // pakai user login custom
+  "id_users": userId, 
   "id_meja": int.tryParse(widget.meja),
   "total_harga": total,
   "uang_bayar": bayar,
   "uang_kembali": bayar - total,
+  "tipe_pesanan": widget.tipePesanan,
 }).select().single();
+
+final mejaId = int.tryParse(widget.meja);
+
+if (mejaId != null) {
+  await supabase
+      .from('meja')
+      .update({"status": "terisi"})
+      .eq('id', mejaId);
+}
+
 
   int transaksiId = trx["id"];
 

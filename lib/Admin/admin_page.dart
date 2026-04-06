@@ -101,42 +101,19 @@ class _AdminPageState extends State<AdminPage> {
      
       body: Column(
         children: [
-          /// HEADER
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 35, 16, 16),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xffe51c23), Color(0xffb31217)],
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Builder(
-                  builder: (context) => IconButton(
-                    icon: const Icon(Icons.menu,
-                        color: Colors.white, size: 22),
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                  ),
-                ),
-                const Text(
-                  "GEPREKZONE",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.white,
-                  child: Icon(Icons.person, color: Colors.red, size: 18),
-                ),
-              ],
-            ),
-          ),
+          AppBar(
+  backgroundColor: const Color(0xffe53935),
+  centerTitle: true,
+  elevation: 0,
+  title: const Text(
+    "Beranda",
+    style: TextStyle(
+      color: Colors.white,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+  iconTheme: const IconThemeData(color: Colors.white), // warna icon menu jadi putih
+),
 
           /// CONTENT
           Expanded(

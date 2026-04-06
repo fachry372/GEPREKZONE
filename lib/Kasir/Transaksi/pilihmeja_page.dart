@@ -48,7 +48,7 @@ class _PilihMejaPageState extends State<PilihMejaPage> {
         backgroundColor: Colors.red,
         centerTitle: true,
         iconTheme: const IconThemeData(
-    color: Colors.white, // ini buat arrow back jadi putih
+    color: Colors.white, 
   ),
         title: const Text("Pilih Meja",style: TextStyle(color: Colors.white),),
       ),

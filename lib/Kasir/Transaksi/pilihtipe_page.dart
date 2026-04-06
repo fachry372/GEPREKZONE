@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Kasir/pilihmeja_page.dart';
+import 'package:geprekzone/Kasir/Transaksi/pilihmeja_page.dart';
 import 'Transaksi.dart';
 
 class PilihTipePage extends StatelessWidget {

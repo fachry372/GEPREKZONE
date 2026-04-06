@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FormMeja extends StatefulWidget {
@@ -58,12 +59,22 @@ class _FormMejaState extends State<FormMeja> {
             'status': status,
           })
           .eq('id', widget.meja!["id"]);
-    } else {
-      await supabase.from('meja').insert({
-        'nomor_meja': nomor.text,
-        'status': status,
-      });
-    }
+   
+  
+  await LogService.log(
+      "Mengubah status meja ${nomor.text} menjadi $status");
+} else {
+  final response = await supabase.from('meja').insert({
+    'nomor_meja': nomor.text,
+    'status': status,
+  }).select().single(); 
+
+ 
+  await LogService.log(
+      "Menambahkan meja baru dengan nomor ${nomor.text}");
+}
+
+    
 
     if (mounted) Navigator.pop(context, true);
   }
