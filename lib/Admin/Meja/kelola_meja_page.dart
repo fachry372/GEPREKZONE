@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Meja/form_meja.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class KelolaMejaPage extends StatefulWidget {
@@ -22,7 +23,7 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
     final response = await supabase
         .from('meja')
         .select()
-        .order('id', ascending: true);
+        .order('nomor_meja', ascending: true);
 
     setState(() {
       meja = List<Map<String, dynamic>>.from(response);
@@ -135,6 +136,10 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
 
     if (konfirmasi == true) {
       await supabase.from('meja').delete().eq('id', meja[index]["id"]);
+
+      await LogService.log(
+      "Menghapus meja nomor ${meja[index]["nomor_meja"]}");
+
 
       getMeja();
     }

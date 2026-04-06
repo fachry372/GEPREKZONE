@@ -64,7 +64,7 @@ class _FormMejaState extends State<FormMeja> {
   await LogService.log(
       "Mengubah status meja ${nomor.text} menjadi $status");
 } else {
-  final response = await supabase.from('meja').insert({
+  await supabase.from('meja').insert({
     'nomor_meja': nomor.text,
     'status': status,
   }).select().single(); 
