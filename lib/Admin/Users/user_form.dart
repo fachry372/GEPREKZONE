@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserForm extends StatefulWidget {
@@ -71,7 +72,6 @@ class _UserFormState extends State<UserForm> {
 
   setState(() => isLoading = true);
 
-  // 🔥 cek username ke database
   bool exist = await isUsernameExist(usernameController.text);
 
   if (exist) {
@@ -80,7 +80,7 @@ class _UserFormState extends State<UserForm> {
       usernameExistError = "Username sudah digunakan";
     });
 
-    _formKey.currentState!.validate(); // trigger ulang validator
+    _formKey.currentState!.validate();
     return;
   }
 
@@ -93,6 +93,10 @@ class _UserFormState extends State<UserForm> {
         'p_role': role,
         'p_password': passwordController.text,
       });
+      
+       await LogService.log(
+        "Mengubah user: ${widget.user!['username']} menjadi ${usernameController.text} (role: $role)"
+      );
     } else {
       await supabase.rpc('insert_user', params: {
         'p_username': usernameController.text,
@@ -100,6 +104,11 @@ class _UserFormState extends State<UserForm> {
         'p_nama': namaController.text,
         'p_role': role,
       });
+
+      
+      await LogService.log(
+        "Menambahkan user baru: ${usernameController.text} (role: $role)"
+      );
     }
 
     Navigator.pop(context);

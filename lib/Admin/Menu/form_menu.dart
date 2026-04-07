@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -89,17 +90,25 @@ class _FormProdukState extends State<FormProduk> {
         'p_image': imageUrl ?? oldImage,
         'p_stok': int.parse(stok.text),
       });
-    } else {
-      await supabase.rpc('insert_product', params: {
-        'p_nama': nama.text,
-        'p_harga': double.parse(harga.text),
-        'p_kategori': kategori,
-        'p_image': imageUrl,
-        'p_stok': int.parse(stok.text),
-      });
-    }
+  
+    await LogService.log(
+      "Mengedit menu: ${nama.text}, Harga: ${harga.text}, Stok: ${stok.text}, Kategori: $kategori"
+    );
+  } else {
+    await supabase.rpc('insert_product', params: {
+      'p_nama': nama.text,
+      'p_harga': double.parse(harga.text),
+      'p_kategori': kategori,
+      'p_image': imageUrl,
+      'p_stok': int.parse(stok.text),
+    });
 
-    Navigator.pop(context, true); // kirim sinyal refresh
+    
+    await LogService.log(
+      "Menambahkan menu baru: ${nama.text}, Harga: ${harga.text}, Stok: ${stok.text}, Kategori: $kategori"
+    );
+  }
+    Navigator.pop(context, true); 
   }
 
   @override

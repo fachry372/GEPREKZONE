@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Transaksi/pilihmeja_page.dart';
+import 'package:geprekzone/Kasir/beranda/kasir_home_page.dart';
 import 'Transaksi.dart';
 
 class PilihTipePage extends StatelessWidget {
@@ -11,13 +12,24 @@ class PilihTipePage extends StatelessWidget {
       backgroundColor: Colors.grey[100],
 
       appBar: AppBar(
-        backgroundColor: Colors.red,
-        centerTitle: true,
-        iconTheme: const IconThemeData(
-    color: Colors.white, 
+  backgroundColor: Colors.red,
+  centerTitle: true,
+  iconTheme: const IconThemeData(color: Colors.white),
+  title: const Text(
+    "Pilih Tipe Pesanan",
+    style: TextStyle(color: Colors.white),
   ),
-        title: const Text("Pilih Tipe Pesanan",style: TextStyle(color: Colors.white),),
-      ),
+  leading: IconButton(
+    icon: const Icon(Icons.arrow_back, color: Colors.white),
+    onPressed: () {
+      
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const KasirHomepage()),
+      );
+    },
+  ),
+),
 
       body: Center(
         child: Row(

@@ -3,7 +3,7 @@ import 'package:geprekzone/Owner/berandaowner.dart';
 import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geprekzone/Admin/admin_page.dart';
-import 'package:geprekzone/Kasir/kasir_home_page.dart';
+import 'package:geprekzone/Kasir/beranda/kasir_home_page.dart';
 
 
 class LoginPage extends StatefulWidget {
@@ -49,6 +49,10 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 final user = res[0];
+
+print("DATA USER:");
+print(user);
+print("ROLE ASLI: ${user['role']}");
 
 if (user['status'] != 'aktif') {
   ScaffoldMessenger.of(context).showSnackBar(

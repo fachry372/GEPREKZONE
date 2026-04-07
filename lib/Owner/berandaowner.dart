@@ -43,38 +43,41 @@ List<Map<String, dynamic>> getMenuMenipis() {
 }
   
 
-  Widget infoCard(IconData icon, String title, String total) {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 10,
-          )
-        ],
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: Colors.red, size: 30),
-          const SizedBox(height: 10),
-          Text(title),
-          const SizedBox(height: 5),
-          Text(
-            total,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
+ Widget infoCard(IconData icon, String title, String total) {
+  return Container(
+    padding: const EdgeInsets.all(15),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: const [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 8,
+          offset: Offset(0, 3),
+        )
+      ],
+    ),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, color: Colors.red, size: 28),
+        const SizedBox(height: 10),
+        Text(
+          title,
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 5),
+        Text(
+          total,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        )
+      ],
+    ),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,7 +186,7 @@ List<Map<String, dynamic>> getMenuMenipis() {
     ),
 
     const Text(
-      "GEPREKZONE",
+      "Beranda",
       style: TextStyle(
         color: Colors.white,
         fontSize: 18,
@@ -200,47 +203,44 @@ List<Map<String, dynamic>> getMenuMenipis() {
 )
           ),
 
-          /// CONTENT
-          Expanded(
-            child: Padding(
-             padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-              child: ListView(
-                children: [
+       Expanded(
+  child: Padding(
+    padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
 
-                  const Text(
-                    "Dashboard Admin",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  GridView.count(
-                    shrinkWrap: true,
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 15,
-                    mainAxisSpacing: 15,
-                    childAspectRatio: 1.2,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-
-                      infoCard(Icons.restaurant_menu, "Total Menu", "120"),
-
-                      infoCard(Icons.people, "Total User", "6"),
-
-                      infoCard(Icons.table_bar, "Total Meja", "15"),
-
-                    ],
-                  ),
-                  const SizedBox(height: 25),
-
-                ],
-                
-              ),
-            ),
+        const Text(
+          "Dashboard Owner",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
+        ),
+
+        const SizedBox(height: 15),
+
+        Expanded(
+          child: GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 15,
+            mainAxisSpacing: 15,
+            childAspectRatio: 1.2,
+            children: [
+
+              infoCard(Icons.receipt_long, "Transaksi Hari Ini", "18"),
+              infoCard(Icons.attach_money, "Pendapatan Hari Ini", "p\.000"),
+              infoCard(Icons.restaurant_menu, "Total Menu", "4"),
+              infoCard(Icons.access_time, "Log Aktivitas", "150"),
+
+            ],
+          ),
+        ),
+
+      ],
+    ),
+  ),
+),
 
         ],
 

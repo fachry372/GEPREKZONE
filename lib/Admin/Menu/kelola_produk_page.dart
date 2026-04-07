@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Menu/form_menu.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -86,11 +87,14 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
     }
   }
 
-  void hapusMenu(int id) async {
-    await supabase.rpc('delete_product', params: {'p_id': id});
+  void hapusMenu(int id, {String? namaProduk}) async {
+  await supabase.rpc('delete_product', params: {'p_id': id});
 
-    getProducts();
-  }
+  // Pencatatan log
+  await LogService.log("Menghapus menu: ${namaProduk ?? 'ID $id'}");
+
+  getProducts();
+}
 
   @override
   Widget build(BuildContext context) {

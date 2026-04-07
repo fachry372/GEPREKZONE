@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Users/user_form.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 
@@ -118,6 +119,9 @@ void formEditUser(int index) {
             : "User berhasil diaktifkan",
         isSuccess: true,
       );
+
+       await LogService.log(
+          "${aktif ? 'Menonaktifkan' : 'Mengaktifkan'} user: ${users[index]['username']}");
 
       getUsers();
     },

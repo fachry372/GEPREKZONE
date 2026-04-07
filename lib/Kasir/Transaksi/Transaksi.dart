@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/Kasir/Transaksi/dialog_pembayaran.dart';
 import 'package:geprekzone/Kasir/Transaksi/struk.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geprekzone/auth/session.dart';
 
@@ -29,16 +31,26 @@ class TransaksiPage extends StatefulWidget {
     required this.meja,
   });
 
+  
+
   @override
   State<TransaksiPage> createState() => _TransaksiPageState();
 }
+
+final currencyFormatter = NumberFormat.currency(
+  locale: 'id_ID',   
+  symbol: 'Rp ',     
+  decimalDigits: 0,   
+);
 
 class _TransaksiPageState extends State<TransaksiPage> {
 
   String kategori = "Semua";
 
   final TextEditingController bayarController = TextEditingController();
+  
 
+  
   double kembalian = 0;
 
  
@@ -54,16 +66,22 @@ Future<void> getProduk() async {
       .select()
       .order('id', ascending: true);
 
+      for (var p in produk) {
+  p["controller"] = TextEditingController(text: p["qty"].toString());
+}
+
   setState(() {
     produk = response.map<Map<String, dynamic>>((p) {
       return {
         ...p,
         "qty": 0, 
         "stok": p["stok"] ?? 0,
+         "controller": TextEditingController(text: "0"),
       };
     }).toList();
   });
 }
+
 
 @override
 void initState() {
@@ -82,6 +100,7 @@ Future<void> simpanTransaksi(double bayar) async  {
 
 final userId = UserSession.userId;
 if (userId == null) {
+  ScaffoldMessenger.of(context).clearSnackBars(); 
   ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(content: Text("User belum login!")),
   );
@@ -127,8 +146,9 @@ if (mejaId != null) {
   }
 
   
-}
 
+  
+}
 
   double get total {
   double t = 0;
@@ -150,6 +170,26 @@ if (mejaId != null) {
       }
     });
   }
+
+  final currencyFormatter = NumberFormat.currency(
+  locale: 'id_ID', 
+  symbol: 'Rp ', 
+  decimalDigits: 0, 
+);
+
+bool get isKeranjangValid {
+  final itemsInCart = produk.where((p) => (p["qty"] ?? 0) > 0);
+  if (itemsInCart.isEmpty) return false;
+
+  for (var p in itemsInCart) {
+    if ((p["isOverStock"] ?? false) == true) {
+      return false; // disable tombol kalau ada yg melebihi stok
+    }
+  }
+
+  return true;
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +278,7 @@ Text("Meja : ${widget.meja}"),
                                   fontWeight: FontWeight.bold),
                             ),
 
-                           Text("Rp ${(item["harga"] as num).toDouble().toStringAsFixed(2)}"),
+                          Text(currencyFormatter.format(item["harga"])),
 
                            Text("Stok : ${item["stok"] ?? 0}"),
 
@@ -255,7 +295,9 @@ Text("Meja : ${widget.meja}"),
     if ((item["stok"] ?? 0) > 0) {
       item["qty"]++;
       item["stok"]--;
+      item["controller"].text = item["qty"].toString();
     } else {
+      ScaffoldMessenger.of(context).clearSnackBars(); 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Stok habis")),
       );
@@ -302,6 +344,8 @@ Text("Meja : ${widget.meja}"),
                             for (var p in produk) {
                               p["stok"] += p["qty"];
                               p["qty"] = 0;
+                                  p["isOverStock"] = false; 
+    p["controller"].text = "0";
                             }
                           });
                         },
@@ -315,75 +359,126 @@ Text("Meja : ${widget.meja}"),
 
                 ...produk.where((p) => p["qty"] > 0).map((p) {
 
-                  double subtotal = p["qty"] * p["harga"];
+  // pastikan setiap item punya controller
+  p["controller"] ??= TextEditingController(text: p["qty"].toString());
 
-                  return Column(
-                    children: [
+  double subtotal = p["qty"] * p["harga"];
 
-                      Row(
-                        children: [
+  return Column(
+    children: [
+      Row(
+        children: [
+          Expanded(
+            child: Text(
+              p["nama_produk"],
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
 
-                          Expanded(
-                            child: Text(
-                              p["nama_produk"],
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ),
+          Row(
+            children: [
+            
+              IconButton(
+                icon: const Icon(Icons.remove),
+               onPressed: () {
+  setState(() {
+    if (p["qty"] > 0) {
+      p["qty"]--;
+      p["stok"]++;
+      p["isOverStock"] = false;
+      p["controller"].text = p["qty"].toString();
+    }
+  });
+},
+              ),
 
-                          IconButton(
-  icon: const Icon(Icons.remove),
-  onPressed: () {
-    setState(() {
-      if (p["qty"] > 0) {
-        p["qty"]--;
-        p["stok"]++;
-      }
-    });
-  },
+             
+          SizedBox(
+  width: 50,
+  child: TextFormField(
+    controller: p["controller"],
+    keyboardType: TextInputType.number,
+    textAlign: TextAlign.center,
+    decoration: const InputDecoration(
+      border: OutlineInputBorder(),
+      isDense: true,
+      contentPadding: EdgeInsets.symmetric(vertical: 8),
+    ),
+onChanged: (value) {
+  if (value.isEmpty) return;
+
+  int? inputQty = int.tryParse(value);
+  if (inputQty == null) return;
+
+  int maxQty = (p["stok"] ?? 0) + (p["qty"] ?? 0);
+
+  setState(() {
+   if (inputQty > maxQty) {
+  p["qty"] = maxQty;
+  p["stok"] = 0;
+  p["isOverStock"] = false; 
+
+  p["controller"].text = maxQty.toString();
+  p["controller"].selection = TextSelection.fromPosition(
+    TextPosition(offset: p["controller"].text.length),
+  );
+
+  ScaffoldMessenger.of(context).clearSnackBars();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text("Maksimal stok: $maxQty")),
+  );
+}else {
+      p["qty"] = inputQty;
+      p["stok"] = maxQty - inputQty;
+      p["isOverStock"] = false;
+    }
+  });
+},
+  ),
 ),
 
-Text("${p["qty"]}x"),
+              
+              IconButton(
+                icon: const Icon(Icons.add),
+              onPressed: () {
+  setState(() {
+    if ((p["stok"] ?? 0) > 0) {
+      p["qty"]++;
+      p["stok"]--;
+      p["isOverStock"] = false;
+      p["controller"].text = p["qty"].toString();
+    } else {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Stok habis")),
+      );
+    }
+  });
+},
+              ),
+            ],
+          ),
 
-IconButton(
-  icon: const Icon(Icons.add), // 🔥 tombol plus
-  onPressed: () {
-    setState(() {
-      if ((p["stok"] ?? 0) > 0) {
-        p["qty"]++;
-        p["stok"]--;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Stok habis")),
-        );
-      }
-    });
-  },
-),
+          const SizedBox(width: 10),
+          Text(currencyFormatter.format(subtotal)),
 
-const SizedBox(width:10),
-
-Text("Rp ${subtotal.toStringAsFixed(2)}"),
-
-                          IconButton(
-                            icon: const Icon(Icons.delete,color: Colors.red),
-                            onPressed: () {
-                              setState(() {
-                                p["stok"] += p["qty"];
-                                p["qty"] = 0;
-                              });
-                            },
-                          ),
-
-                        ],
-                      ),
-
-                      const Divider()
-
-                    ],
-                  );
-
-                }),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () {
+              setState(() {
+                p["stok"] += p["qty"];
+                p["qty"] = 0;
+                p["isOverStock"] = false;
+                p["controller"].text = "0";
+              });
+            },
+          ),
+        ],
+      ),
+      const Divider(),
+    ],
+  );
+}),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -394,42 +489,42 @@ Text("Rp ${subtotal.toStringAsFixed(2)}"),
                           fontWeight: FontWeight.bold,
                           fontSize:16),
                     ),
-                    Text(
-  "Rp ${total.toStringAsFixed(2)}",
+                    Text(currencyFormatter.format(total),
   style: const TextStyle(
     fontWeight: FontWeight.bold,
     fontSize: 16),
 ),
                   ],
+                  
                 ),
+
+if (!isKeranjangValid)
 
                 const SizedBox(height:10),
 
                 SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red
-                    ),
-                    onPressed: () {
-
-                      if(total == 0){
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Keranjang masih kosong"),
-                          ),
-                        );
-                        return;
-                      }
-
-                      showDialog(
-                        context: context,
-                        builder: (context) => dialogPembayaran(),
-                      );
-                    },
-                    child: const Text("BAYAR",style: TextStyle(color: Colors.white),),
-                  ),
-                )
+  width: double.infinity,
+  child:ElevatedButton(
+  style: ElevatedButton.styleFrom(
+    backgroundColor: isKeranjangValid ? Colors.red : Colors.grey,
+  ),
+  onPressed: isKeranjangValid
+      ? () {
+          showDialog(
+            context: context,
+            builder: (context) => PembayaranDialog(
+              total: total,
+              produk: produk,
+              tipePesanan: widget.tipePesanan,
+              meja: widget.meja,
+              onSimpan: simpanTransaksi,
+            ),
+          );
+        }
+      : null, 
+  child: const Text("BAYAR", style: TextStyle(color: Colors.white)),
+),
+),
 
               ],
             ),
@@ -457,152 +552,5 @@ Text("Rp ${subtotal.toStringAsFixed(2)}"),
       ),
     );
   }
-
- Widget dialogPembayaran() {
-  return AlertDialog(
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(15),
-    ),
-    title: const Text(
-      "Pembayaran",
-      style: TextStyle(
-        fontWeight: FontWeight.bold,
-        color: Colors.red,
-      ),
-    ),
-    content: StatefulBuilder(
-      builder: (context, setStateDialog) {
-
-        final totalController = TextEditingController(
-          text: total.toStringAsFixed(2),
-        );
-
-        final kembaliController = TextEditingController(
-          text: kembalian >= 0
-              ? kembalian.toStringAsFixed(2)
-              : "",
-        );
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-
-            /// TOTAL (READ ONLY)
-            TextFormField(
-              controller: totalController,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: "Total",
-                prefixText: "Rp ",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            /// NOMINAL BAYAR
-            TextFormField(
-              controller: bayarController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: "Nominal Bayar",
-                prefixText: "Rp ",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onChanged: (value) {
-                double bayar = double.tryParse(value) ?? 0;
-
-                setStateDialog(() {
-                  kembalian = bayar - total;
-
-                  kembaliController.text =
-                      kembalian >= 0
-                          ? kembalian.toStringAsFixed(2)
-                          : "";
-                });
-              },
-            ),
-
-            const SizedBox(height: 15),
-
-            /// KEMBALIAN (READ ONLY & MUNCUL JIKA >= 0)
-            TextFormField(
-              controller: kembaliController,
-              readOnly: true,
-              decoration: InputDecoration(
-                labelText: "Kembalian",
-                prefixText: "Rp ",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    ),
-
-    actions: [
-
-      TextButton(
-        onPressed: () {
-          Navigator.pop(context);
-        },
-        child: const Text("Batal"),
-      ),
-
-      ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.red,
-        ),
-       onPressed: () async {
-  double bayar = double.tryParse(bayarController.text) ?? 0;
-  kembalian = bayar - total;
-
-  if (bayar < total) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Uang tidak cukup"),
-      ),
-    );
-    return;
-  }
-
-  /// 🔥 SIMPAN KE DATABASE DULU
-  await simpanTransaksi(bayar);
-
-  Navigator.pop(context);
-  Navigator.pop(context);
-
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => StrukPage(
-        produk: produk,
-        total: total,
-        bayar: bayar,
-        kembali: kembalian,
-        tipe: widget.tipePesanan,
-        meja: widget.meja,
-        kodeTransaksi: "TRX${DateTime.now().millisecondsSinceEpoch}",
-        tanggal: DateTime.now().toString(),
-      ),
-    ),
-  ).then((value) {
-    if (value == true) {
-      resetKeranjang();
-    }
-  });
-},
-        child: const Text("Selesai",
-            style: TextStyle(color: Colors.white)),
-      ),
-    ],
-  );
-}
 
 }
