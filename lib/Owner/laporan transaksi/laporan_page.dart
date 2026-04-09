@@ -1,16 +1,22 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Kasir/beranda/detailtransaksi_page.dart';
+import 'package:geprekzone/Owner/laporan%20transaksi/Detail_laporan.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
-class RiwayatTransaksiPage extends StatefulWidget {
-  const RiwayatTransaksiPage({super.key});
+class LaporanPage extends StatefulWidget {
+  const LaporanPage({super.key});
 
   @override
-  State<RiwayatTransaksiPage> createState() => _RiwayatTransaksiPageState();
+  State<LaporanPage> createState() => _LaporanPageState();
 }
 
-class _RiwayatTransaksiPageState extends State<RiwayatTransaksiPage> {
+
+
+class _LaporanPageState extends State<LaporanPage> {
   final supabase = Supabase.instance.client;
   List data = [];
 
@@ -91,6 +97,165 @@ bool isLoading = false;
     );
     return format.format(angka);
   }
+  
+  Future<void> exportPDF(BuildContext context) async {
+  final pdf = pw.Document();
+
+ final total = data.fold<double>(
+  0,
+  (sum, item) => sum + (item['total_harga'] ?? 0),
+);
+  pdf.addPage(
+    pw.Page(
+      build: (pw.Context context) {
+        return pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+
+     
+            pw.Center(
+              child: pw.Text("GEPREKZONE",
+                  style: pw.TextStyle(
+                      fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            ),
+            pw.Center(child: pw.Text("Laporan Transaksi Owner")),
+            pw.SizedBox(height: 10),
+
+            
+            pw.Text(
+              "Periode : "
+              "${startDate == null ? '-' : DateFormat('yyyy-MM-dd').format(startDate!)}"
+              " s/d "
+              "${endDate == null ? '-' : DateFormat('yyyy-MM-dd').format(endDate!)}",
+            ),
+
+            pw.Text("Tipe Pesanan : $selectedTipe"),
+
+            pw.Divider(),
+
+
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text("Total Pendapatan",
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                pw.Text(rupiah(total)),
+              ],
+            ),
+
+            pw.SizedBox(height: 10),
+            pw.Divider(),
+
+         
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Expanded(
+                    child: pw.Text("Kode",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                pw.Expanded(
+                    child: pw.Text("Tanggal",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                pw.Expanded(
+                    child: pw.Text("Tipe",
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+                pw.Expanded(
+                    child: pw.Text("Total",
+                        textAlign: pw.TextAlign.right,
+                        style: pw.TextStyle(fontWeight: pw.FontWeight.bold))),
+              ],
+            ),
+
+            pw.Divider(),
+
+           
+            ...data.map((trx) {
+              return pw.Padding(
+                padding: const pw.EdgeInsets.symmetric(vertical: 4),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Expanded(child: pw.Text(trx['kode_transaksi'] ?? '-')),
+
+                    pw.Expanded(
+                      child: pw.Text(
+                        DateFormat('yyyy-MM-dd')
+                            .format(DateTime.tryParse(trx['created_at'] ?? '') ?? DateTime.now()),
+                      ),
+                    ),
+
+                    pw.Expanded(child: pw.Text(trx['tipe_pesanan'] ?? '-')),
+
+                    pw.Expanded(
+                      child: pw.Text(
+                        rupiah(trx['total_harga'] ?? 0),
+                        textAlign: pw.TextAlign.right,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+
+            pw.Divider(),
+
+            pw.SizedBox(height: 10),
+
+           
+            pw.Center(
+              child: pw.Text(
+                "Dicetak pada ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}",
+                style: const pw.TextStyle(fontSize: 10),
+              ),
+            ),
+          ],
+        );
+      },
+    ),
+  );
+
+
+  PermissionStatus status = await Permission.manageExternalStorage.status;
+
+  if (status.isDenied) {
+    status = await Permission.manageExternalStorage.request();
+  }
+
+  if (status.isPermanentlyDenied) {
+    await openAppSettings();
+    return;
+  }
+
+  if (!status.isGranted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Izin storage ditolak")),
+    );
+    return;
+  }
+
+  final directory = Directory('/storage/emulated/0/Download/GeprekZone');
+
+  if (!await directory.exists()) {
+    await directory.create(recursive: true);
+  }
+
+ 
+  String tanggalFormat =
+    DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+
+  final file = File(
+    "${directory.path}/LAPORAN_${tanggalFormat}.pdf",
+  );
+
+  await file.writeAsBytes(await pdf.save());
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(
+      content: Text("Laporan berhasil disimpan di Download/GeprekZone"),
+      backgroundColor: Colors.green,
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +373,26 @@ bool isLoading = false;
                   decoration: const InputDecoration(border: InputBorder.none),
                 ),
               ),
-        
+        const SizedBox(height: 10),
+
+SizedBox(
+  width: double.infinity,
+  child: ElevatedButton.icon(
+    onPressed: data.isEmpty
+    ? null
+    : () => exportPDF(context),
+    icon: const Icon(Icons.picture_as_pdf),
+    label: const Text("Download PDF"),
+    style: ElevatedButton.styleFrom(
+      backgroundColor: Colors.red,
+      foregroundColor: Colors.white,
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  ),
+),
               const SizedBox(height: 15),
         
               Expanded(
@@ -250,7 +434,7 @@ bool isLoading = false;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => DetailTransaksiPage(
+                          builder: (context) => DetailLaporan(
                             trx: trx,
                             items: detail,
                           ),

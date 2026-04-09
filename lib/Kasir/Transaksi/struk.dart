@@ -134,7 +134,9 @@ if (!status.isGranted) {
   }
 
 
-  String tanggalFormat = DateTime.now().toString().split(" ").first;
+    String tanggalFormat =
+    DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
+
 
   final file = File(
     "${directory.path}/STRUK_${tanggalFormat}_$kodeTransaksi.pdf",
@@ -144,11 +146,13 @@ if (!status.isGranted) {
 
  
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("PDF berhasil disimpan di Download/GeprekZone"),
-      backgroundColor: Colors.green,
-    ),
-  );
+  SnackBar(
+    content: const Text("PDF berhasil disimpan di Download/GeprekZone"),
+    backgroundColor: Colors.green,
+    behavior: SnackBarBehavior.floating,
+    margin: const EdgeInsets.all(16),
+  ),
+);
 }
   
   
@@ -254,22 +258,35 @@ if (!status.isGranted) {
 
             const Spacer(),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red),
-                onPressed: () {
-                  exportPDF(context);
-                },
-                icon: const Icon(Icons.picture_as_pdf,color: Colors.white,),
-                label: const Text("Download PDF",style: TextStyle(color: Colors.white),),
-              ),
-            ),
+        
 
           ],
         ),
       ),
+   
+  bottomNavigationBar: Container(
+    padding: const EdgeInsets.all(16),
+  
+    child: SafeArea(
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton.icon(
+          onPressed: () => exportPDF(context),
+          icon: const Icon(Icons.picture_as_pdf),
+          label: const Text("Download PDF"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+      ),
+    ),
+  ),
+
     );
   }
 }

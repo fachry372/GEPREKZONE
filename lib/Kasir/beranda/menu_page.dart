@@ -122,7 +122,6 @@ class _MenuPageState extends State<MenuPage> {
             ),
           ),
 
-          /// LIST MENU
           Expanded(
             child: filteredProducts.isEmpty
                 ? const Center(
