@@ -151,7 +151,7 @@ class _AdminPageState extends State<AdminPage> {
                                 totalMenu.toString()),
                             infoCard(Icons.people, "Total User",
                                 totalUser.toString()),
-                            infoCard(Icons.table_bar, "Total Meja",
+                            infoCard(Icons.table_restaurant, "Total Meja",
                                 totalMeja.toString()),
                           ],
                         ),

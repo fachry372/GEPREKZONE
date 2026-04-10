@@ -21,6 +21,8 @@ class _FormMejaState extends State<FormMeja> {
 
   bool get isEdit => widget.meja != null;
 
+  bool isLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -31,14 +33,25 @@ class _FormMejaState extends State<FormMeja> {
     }
   }
 
-  Future<void> simpan() async {
-    setState(() => errorNomor = null);
+ Future<void> simpan() async {
+  
+  if (isLoading) return; 
 
+  setState(() {
+    errorNomor = null;
+    isLoading = true; 
+  });
+
+  try {
     if (nomor.text.isEmpty) {
-      setState(() => errorNomor = "Nomor meja wajib diisi");
+      setState(() {
+        errorNomor = "Nomor meja wajib diisi";
+        isLoading = false;
+      });
       return;
     }
 
+  
     final cekMeja = await supabase
         .from('meja')
         .select()
@@ -46,38 +59,37 @@ class _FormMejaState extends State<FormMeja> {
 
     if (cekMeja.isNotEmpty) {
       if (!isEdit || cekMeja[0]["id"] != widget.meja!["id"]) {
-        setState(() => errorNomor = "Nomor meja sudah ada!");
+        setState(() {
+          errorNomor = "Nomor meja sudah ada!";
+          isLoading = false; 
+        });
         return;
       }
     }
 
     if (isEdit) {
-      await supabase
-          .from('meja')
-          .update({
-            'nomor_meja': nomor.text,
-            'status': status,
-          })
-          .eq('id', widget.meja!["id"]);
-   
-  
-  await LogService.log(
-      "Mengubah status meja ${nomor.text} menjadi $status");
-} else {
-  await supabase.from('meja').insert({
-    'nomor_meja': nomor.text,
-    'status': status,
-  }).select().single(); 
+      await supabase.from('meja').update({
+        'nomor_meja': nomor.text,
+        'status': status,
+      }).eq('id', widget.meja!["id"]);
 
- 
-  await LogService.log(
-      "Menambahkan meja baru dengan nomor ${nomor.text}");
-}
+      await LogService.log("Mengubah status meja ${nomor.text} menjadi $status");
+    } else {
+      await supabase.from('meja').insert({
+        'nomor_meja': nomor.text,
+        'status': status,
+      });
 
-    
+      await LogService.log("Menambahkan meja baru dengan nomor ${nomor.text}");
+    }
 
     if (mounted) Navigator.pop(context, true);
+  } catch (e) {
+   
+    setState(() => isLoading = false);
+    
   }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +113,7 @@ class _FormMejaState extends State<FormMeja> {
 
           const SizedBox(height: 25),
 
-          /// INPUT NOMOR
+     
           TextFormField(
             controller: nomor,
             decoration: InputDecoration(
@@ -119,7 +131,7 @@ class _FormMejaState extends State<FormMeja> {
 
           const SizedBox(height: 15),
 
-          /// STATUS
+       
           DropdownButtonFormField(
             value: status,
             items: const [
@@ -142,45 +154,62 @@ class _FormMejaState extends State<FormMeja> {
 
           const SizedBox(height: 25),
 
-          /// BUTTON
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xffe53935),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                  ),
-                  onPressed: simpan,
-                  child: Text(
-                    isEdit ? "Update" : "Simpan",
-                    style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 15),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30)),
-                  ),
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Batal",
-                      style: TextStyle(fontSize: 18)),
-                ),
-              ),
-            ],
+          
+        /// BUTTONS SECTION
+Row(
+  children: [
+    // Tombol Batal
+    Expanded(
+      child: ElevatedButton(
+        // Tombol batal juga di-disable saat sedang loading
+        onPressed: isLoading ? null : () => Navigator.pop(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 235, 212, 214),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
           ),
+        ),
+        child: const Text(
+          "Batal",
+          style: TextStyle(color: Colors.black87),
+        ),
+      ),
+    ),
+    const SizedBox(width: 12),
+    // Tombol Simpan / Update
+    Expanded(
+      child: ElevatedButton(
+        onPressed: isLoading ? null : simpan,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.red,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+        ),
+        child: isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                isEdit ? "Update" : "Simpan",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+      ),
+    ),
+  ],
+),
 
           const SizedBox(height: 20),
         ],

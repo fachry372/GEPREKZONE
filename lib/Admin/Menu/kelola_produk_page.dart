@@ -24,7 +24,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
     final response = await supabase
         .from('products')
         .select()
-        .order('id', ascending: true);
+        .order('id', ascending: false);
 
     setState(() {
       products = List<Map<String, dynamic>>.from(response);
@@ -151,6 +151,23 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
       );
     }
   }
+}
+
+
+void konfirmasiHapus(int id, String nama) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: Colors.transparent, 
+    builder: (context) {
+      return KonfirmasiHapus(
+        namaProduk: nama,
+        onConfirm: () {
+          Navigator.pop(context); 
+          hapusMenu(id, namaProduk: nama); 
+        },
+      );
+    },
+  );
 }
 
 String formatRupiah(num angka) {
@@ -305,14 +322,17 @@ String formatRupiah(num angka) {
 
         
           Expanded(
+          child: RefreshIndicator(
+            onRefresh: getProducts, // Fungsi yang dipanggil saat ditarik
+            color: Colors.red,
             child: filteredProducts.isEmpty
-                ? const Center(
-                    child: Text(
-                      "Data tidak ditemukan",
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
+                ? ListView( // Gunakan ListView agar tetap bisa di-refresh meski kosong
+                    children: const [
+                      SizedBox(height: 100),
+                      Center(child: Text("Data tidak ditemukan", style: TextStyle(color: Colors.grey))),
+                    ],
                   )
-                : ListView.builder(
+                :ListView.builder(
                     padding: const EdgeInsets.only(top: 0, bottom: 80, left: 0, right: 0),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
@@ -414,7 +434,7 @@ String formatRupiah(num angka) {
                               const SizedBox(width: 20),
                               GestureDetector(
                                 onTap: () {
-                                  hapusMenu(product["id"]);
+                                  konfirmasiHapus(product["id"],product["nama_produk"]);
                                 },
                                 child: const Text(
                                   "Hapus",
@@ -432,8 +452,99 @@ String formatRupiah(num angka) {
                     },
                   ),
           ),
+          )
+        ],
+      
+      ),
+    );
+  }
+}
+
+
+class KonfirmasiHapus extends StatelessWidget {
+  final String namaProduk;
+  final VoidCallback onConfirm;
+
+  const KonfirmasiHapus({
+    super.key,
+    required this.namaProduk,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+        
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom:20),
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        
+          const Text(
+            "Hapus Menu?",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Apakah Anda yakin ingin menghapus '$namaProduk'? Tindakan ini tidak dapat dibatalkan.",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(
+                            255,
+                            235,
+                            212,
+                            214,
+                          ),
+                    side: BorderSide.none,      
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: const Text("Batal", style: TextStyle(color: Colors.black)),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onConfirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    "Hapus Sekarang",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
         ],
       ),
     );
   }
 }
+

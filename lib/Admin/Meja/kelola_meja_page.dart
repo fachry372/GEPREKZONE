@@ -23,7 +23,7 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
     final response = await supabase
         .from('meja')
         .select()
-        .order('nomor_meja', ascending: true);
+        .order('id', ascending: false);
 
     setState(() {
       meja = List<Map<String, dynamic>>.from(response);
@@ -37,89 +37,110 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
   }
 
   void formMeja({Map<String, dynamic>? data}) async {
-  final result = await showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-    ),
-    builder: (_) => FormMeja(meja: data),
-  );
-
-  if (result == true) {
-    getMeja();
-  }
-}
-
-  void hapusMeja(int index) async {
-    bool? konfirmasi = await showModalBottomSheet<bool>(
+    final result = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
+      builder: (_) => FormMeja(meja: data),
+    );
+
+    if (result == true) {
+      getMeja();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              data == null
+                  ? "Meja berhasil ditambahkan"
+                  : "Meja berhasil diperbarui",
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    }
+  }
+
+  void hapusMeja(int index) async {
+    var dataMeja = meja[index];
+
+    bool? konfirmasi = await showModalBottomSheet<bool>(
+      context: context,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 20,
-            right: 20,
-            top: 25,
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                "Hapus Meja",
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 20),
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              const SizedBox(height: 15),
-              Text(
-                "Apakah Anda yakin ingin menghapus Meja ${meja[index]["nomor_meja"]}?",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
+
+              const Text(
+                "Hapus Meja?",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 25),
+              const SizedBox(height: 8),
+              Text(
+                "Apakah Anda yakin ingin menghapus Meja ${dataMeja["nomor_meja"]}?",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, false),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: const Color.fromARGB(
+                          255,
+                          235,
+                          212,
+                          214,
+                        ),
                         elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
-                          side: const BorderSide(color: Colors.grey),
                         ),
                       ),
-                      onPressed: () => Navigator.pop(context, false),
                       child: const Text(
                         "Batal",
-                        style: TextStyle(fontSize: 18),
+                        style: TextStyle(color: Colors.black),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 15),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:Color.fromARGB(255, 239, 218, 218),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        backgroundColor: Colors.red,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
                       ),
-                      onPressed: () => Navigator.pop(context, true),
                       child: const Text(
                         "Hapus",
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -127,7 +148,7 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
             ],
           ),
         );
@@ -135,13 +156,36 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
     );
 
     if (konfirmasi == true) {
-      await supabase.from('meja').delete().eq('id', meja[index]["id"]);
+      if (dataMeja["status"] == "terisi") {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Meja yang sedang terisi tidak dapat dihapus!"),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
 
-      await LogService.log(
-      "Menghapus meja nomor ${meja[index]["nomor_meja"]}");
+      try {
+        await supabase.from('meja').delete().eq('id', dataMeja["id"]);
+        await LogService.log("Menghapus meja nomor ${dataMeja["nomor_meja"]}");
 
-
-      getMeja();
+        if (mounted) {
+          getMeja();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Meja berhasil dihapus"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Gagal menghapus: $e")));
+        }
+      }
     }
   }
 
@@ -160,7 +204,7 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
     }).toList();
 
     return Scaffold(
-       drawer: const AdminDrawer(),
+      drawer: const AdminDrawer(),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           formMeja();
@@ -186,17 +230,16 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
             child: Stack(
               alignment: Alignment.center,
               children: [
-               
                 Align(
                   alignment: Alignment.centerLeft,
-                  child:  Builder(
-  builder: (context) => IconButton(
-    icon: const Icon(Icons.menu, color: Colors.white),
-    onPressed: () {
-      Scaffold.of(context).openDrawer();
-    },
-  ),
-),
+                  child: Builder(
+                    builder: (context) => IconButton(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      onPressed: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                    ),
+                  ),
                 ),
 
                 const Row(
@@ -220,7 +263,6 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-              
                 TextField(
                   onChanged: (value) {
                     setState(() {
@@ -250,7 +292,6 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
 
                 const SizedBox(height: 10),
 
-                /// FILTER STATUS
                 DropdownButtonFormField(
                   value: filterStatus,
                   items: const [
@@ -267,129 +308,137 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
                     });
                   },
                   decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.grey[200],
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                ),
+    
+    filled: true,
+    fillColor: Colors.white,
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 14,
+    ),
+
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey.shade300),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide(color: Colors.grey.shade400),
+    ),
+  ),
+),
               ],
             ),
           ),
 
-          /// LIST MEJA
-   Expanded(
-  child: filteredMeja.isEmpty
-      ? const Center(
-          child: Text(
-            "Data tidak ditemukan",
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
-          ),
-        )
-      : ListView.builder(
-          padding: EdgeInsets.zero,
-          itemCount: filteredMeja.length,
-          itemBuilder: (context, index) {
-            var data = filteredMeja[index];
-            bool terisi = data["status"] == "terisi";
+          Expanded(
+            child: filteredMeja.isEmpty
+                ? const Center(
+                    child: Text(
+                      "Data tidak ditemukan",
+                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.only(
+                      top: 0,
+                      bottom: 80,
+                      left: 0,
+                      right: 0,
+                    ),
 
-            return Card(
-              color: const Color.fromARGB(255, 239, 218, 218),
-              margin: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 6,
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: terisi ? Colors.red : Colors.green,
-                  child: const Icon(
-                    Icons.table_restaurant,
-                    color: Colors.white,
+                    itemCount: filteredMeja.length,
+                    itemBuilder: (context, index) {
+                      var data = filteredMeja[index];
+                      bool terisi = data["status"] == "terisi";
+
+                      return Card(
+                        color: Colors.white,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: terisi ? Colors.red : Colors.green,
+                            child: const Icon(
+                              Icons.table_restaurant,
+                              color: Colors.white,
+                            ),
+                          ),
+
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Meja ${data["nomor_meja"]}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: terisi
+                                      ? Colors.red[300]
+                                      : Colors.green[400],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  data["status"],
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              GestureDetector(
+                                onTap: () {
+                                  formMeja(data: data);
+                                },
+                                child: const Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 20),
+
+                              GestureDetector(
+                                onTap: () {
+                                  hapusMeja(index);
+                                },
+                                child: const Text(
+                                  "Hapus",
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                ),
-
-              
-                title: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Meja ${data["nomor_meja"]}",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                     decoration: BoxDecoration(
-  color: terisi ? Colors.red[300] : Colors.green[400],
-  borderRadius: BorderRadius.circular(8),
-),
-                      child: Text(
-                        data["status"],
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        formMeja(data: data);
-                      },
-                      child: const Text(
-                        "Edit",
-                        style: TextStyle(
-                          color: Colors.blue,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    
-                    GestureDetector(
-                      onTap: () {
-                        hapusMeja(index);
-                      },
-                      child: const Text(
-                        "Hapus",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-)
-        ]
+          ),
+        ],
       ),
     );
-    
-            
-            
-    
   }
 }
