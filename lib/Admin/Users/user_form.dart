@@ -5,11 +5,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class UserForm extends StatefulWidget {
   final Map<String, dynamic>? user;
   final Function onSuccess;
+    final bool disableRole;
 
   const UserForm({
     super.key,
     this.user,
     required this.onSuccess,
+    this.disableRole = false,
   });
 
   @override
@@ -32,6 +34,8 @@ class _UserFormState extends State<UserForm> {
   String? usernameExistError;
 
   bool get isEdit => widget.user != null;
+
+
 
   @override
   void initState() {
@@ -258,11 +262,11 @@ class _UserFormState extends State<UserForm> {
                     child: Text(item.toUpperCase()),
                   );
                 }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    role = value!;
-                  });
-                },
+                onChanged: widget.disableRole ? null : (value) { 
+    setState(() {
+      role = value!;
+    });
+  },
                 decoration: InputDecoration(
                   labelText: "Role",
                   filled: true,
@@ -279,14 +283,37 @@ class _UserFormState extends State<UserForm> {
             
            Row(
   children: [
+     Expanded(
+      child: ElevatedButton(
+        onPressed: isLoading ? null : () => Navigator.pop(context),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color.fromARGB(255, 235, 212, 214), 
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          elevation: 0,
+        ),
+        child: const Text(
+          "Batal",
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    ),
+
+     const SizedBox(width: 12),
+
     Expanded(
       child: ElevatedButton(
         onPressed: isLoading ? null : submit,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xffff3d00), // merah/orange
+          backgroundColor: Colors.red,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // 🔥 full rounded
+            borderRadius: BorderRadius.circular(30), 
           ),
           elevation: 0,
         ),
@@ -308,27 +335,8 @@ class _UserFormState extends State<UserForm> {
               ),
       ),
     ),
-    const SizedBox(width: 12),
-    Expanded(
-      child: ElevatedButton(
-        onPressed: isLoading ? null : () => Navigator.pop(context),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xffe0c7c7), // abu pink soft
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30), // 🔥 full rounded
-          ),
-          elevation: 0,
-        ),
-        child: const Text(
-          "Batal",
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ),
-    ),
+   
+   
   ],
 ),
 

@@ -3,6 +3,7 @@ import 'package:geprekzone/Admin/Menu/form_menu.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -88,13 +89,78 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
   }
 
   void hapusMenu(int id, {String? namaProduk}) async {
-  await supabase.rpc('delete_product', params: {'p_id': id});
+  try {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
 
-  // Pencatatan log
-  await LogService.log("Menghapus menu: ${namaProduk ?? 'ID $id'}");
 
-  getProducts();
+    await supabase.rpc('delete_product', params: {'p_id': id});
+
+    
+    if (mounted) Navigator.pop(context);
+
+  
+    await LogService.log("Menghapus menu: ${namaProduk ?? 'ID $id'}");
+
+   
+    getProducts();
+    
+    
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Menu berhasil dihapus"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  } on PostgrestException catch (e) {
+    
+    if (mounted) Navigator.pop(context);
+
+   
+    if (e.code == '23503' || e.message.toLowerCase().contains('foreign key')) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Menu tidak bisa dihapus karena sudah terhubung ke transaksi"),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    } else {
+   
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal menghapus: ${e.message}")),
+        );
+      }
+    }
+  } catch (e) {
+  
+    if (mounted) Navigator.pop(context);
+    
+ 
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Terjadi kesalahan: $e")),
+      );
+    }
+  }
 }
+
+String formatRupiah(num angka) {
+  return NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  ).format(angka);
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -149,7 +215,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: [
-                /// SEARCH
+                
                 SizedBox(
                   height: 60,
                   child: TextField(
@@ -179,7 +245,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
 
                 const SizedBox(height: 10),
 
-                /// FILTER (SEJAJAR)
+               
                 Row(
                   children: [
                     Expanded(
@@ -237,7 +303,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
             ),
           ),
 
-          /// LIST MENU
+        
           Expanded(
             child: filteredProducts.isEmpty
                 ? const Center(
@@ -247,13 +313,13 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                     ),
                   )
                 : ListView.builder(
-                    padding: EdgeInsets.zero,
+                    padding: const EdgeInsets.only(top: 0, bottom: 80, left: 0, right: 0),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       var product = filteredProducts[index];
 
                       return Card(
-                        color: const Color.fromARGB(255, 239, 218, 218),
+                        color: Colors.white,
                         margin: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
@@ -276,7 +342,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                                   ),
                           ),
 
-                          /// TEXT
+                        
                           title: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -289,7 +355,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                               ),
                               const SizedBox(height: 0),
                               Text(
-                                "Rp ${product["harga"]}",
+                                formatRupiah(product["harga"] ?? 0),
                                 style: TextStyle(
                                   color: Colors.grey[700],
                                   fontSize: 12,
@@ -307,7 +373,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                               ),
                               const SizedBox(height: 6),
 
-                              /// BADGE
+                         
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 10,
@@ -328,7 +394,7 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
                             ],
                           ),
 
-                          /// ACTION
+                        
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Users/user_form.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:awesome_dialog/awesome_dialog.dart';
 
 class KelolaUserPage extends StatefulWidget {
   const KelolaUserPage({super.key});
@@ -25,19 +25,19 @@ String? passwordError;
 
   List<Map<String, dynamic>> users = [];
 
- void showNotif({
-  required String message,
-  required bool isSuccess,
-}) {
-  AwesomeDialog(
-    context: context,
-    dialogType: isSuccess ? DialogType.success : DialogType.error,
-    animType: AnimType.scale,
-    title: isSuccess ? "Berhasil" : "Gagal",
-    desc: message,
-    btnOkOnPress: () {},
-  ).show();
-} 
+ void showSnack(String message, {bool isSuccess = true}) {
+  final messenger = ScaffoldMessenger.of(context);
+
+  messenger.clearSnackBars(); 
+
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: isSuccess ? Colors.green : Colors.red,
+
+    ),
+  );
+}
 
  Future<void> getUsers() async {
     final response = await supabase
@@ -66,10 +66,7 @@ void formTambahUser() {
     builder: (context) {
       return UserForm(
         onSuccess: () {
-          showNotif(
-            message: "User berhasil ditambahkan",
-            isSuccess: true,
-          );
+          showSnack("User berhasil ditambahkan");
           getUsers();
         },
       );
@@ -78,6 +75,7 @@ void formTambahUser() {
 }
 
 void formEditUser(int index) {
+   final user = users[index];
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -86,12 +84,11 @@ void formEditUser(int index) {
     ),
     builder: (context) {
       return UserForm(
-        user: users[index],
+        user: user,
+  disableRole: user['id'] == UserSession.userId, 
+
         onSuccess: () {
-          showNotif(
-            message: "User berhasil diupdate",
-            isSuccess: true,
-          );
+          showSnack("User berhasil diupdate");
           getUsers();
         },
       );
@@ -99,34 +96,108 @@ void formEditUser(int index) {
   );
 }
  void toggleStatus(int index) {
+  final user = users[index];
+
+
+  if (user['id'] == UserSession.userId) {
+    showSnack("Tidak bisa menonaktifkan akun yang sedang dipakai ", isSuccess: false);
+    return;
+  }
+
   bool aktif = users[index]["status"] == "aktif";
 
-  AwesomeDialog(
+  showModalBottomSheet(
     context: context,
-    dialogType: DialogType.warning,
-    animType: AnimType.bottomSlide,
-    title: aktif ? "Nonaktifkan User?" : "Aktifkan User?",
-    desc: "Apakah kamu yakin ingin mengubah status user ini?",
-    btnCancelOnPress: () {},
-    btnOkOnPress: () async {
-      await supabase.rpc('toggle_user_status', params: {
-        'p_id': users[index]['id'],
-      });
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              aktif ? "Nonaktifkan User?" : "Aktifkan User?",
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
 
-      showNotif(
-        message: aktif
-            ? "User berhasil dinonaktifkan"
-            : "User berhasil diaktifkan",
-        isSuccess: true,
+            const SizedBox(height: 10),
+
+            const Text("Apakah kamu yakin ingin mengubah status user ini?"),
+
+            const SizedBox(height: 20),
+
+            Row(
+              children: [
+              
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 235, 212, 214), 
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      "Batal",
+                      style: TextStyle(color: Colors.black),
+                    ),
+                  ),
+                ),
+
+                  const SizedBox(width: 10),
+
+                 Expanded(
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+
+                      await supabase.rpc('toggle_user_status', params: {
+                        'p_id': users[index]['id'],
+                      });
+
+                      await LogService.log(
+                        "${aktif ? 'Menonaktifkan' : 'Mengaktifkan'} user: ${users[index]['username']}",
+                      );
+
+                      getUsers();
+
+                      showSnack(
+                        aktif
+                            ? "User berhasil dinonaktifkan"
+                            : "User berhasil diaktifkan",
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      "Ya",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+
+              ],
+            ),
+
+            const SizedBox(height: 10),
+          ],
+        ),
       );
-
-       await LogService.log(
-          "${aktif ? 'Menonaktifkan' : 'Mengaktifkan'} user: ${users[index]['username']}");
-
-      getUsers();
     },
-  ).show();
+  );
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -338,7 +409,7 @@ void formEditUser(int index) {
                             labelText: "Role",
                             hintText: "Pilih role",
 
-                            // 🔥 INI PENTING
+                            
                             floatingLabelBehavior: FloatingLabelBehavior.auto,
 
                             hintStyle: TextStyle(color: Colors.grey[400]),
@@ -387,6 +458,7 @@ void formEditUser(int index) {
           ),
         )
       : ListView.builder(
+        
               padding: EdgeInsets.zero,
               itemCount: filteredUsers.length,
               itemBuilder: (context, index) {
@@ -394,21 +466,26 @@ void formEditUser(int index) {
                 bool aktif = data["status"].toString() == "aktif";
 
                 return Card(
-                  color: const Color.fromARGB(255, 239, 218, 218),
+                  color: Colors.white,
+elevation: 3,
+shadowColor: Colors.black26,
+shape: RoundedRectangleBorder(
+  borderRadius: BorderRadius.circular(12),
+),
                   margin: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Colors.orange,
+                      backgroundColor: Colors.red,
                       child: const Icon(Icons.person, color: Colors.white),
                     ),
 
                     title: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // 🔹 Username utama
+                 
                         Text(
                           data["username"],
                           style: const TextStyle(
@@ -419,7 +496,7 @@ void formEditUser(int index) {
 
                         const SizedBox(height: 2),
 
-                        // 🔹 Nama kecil (abu)
+                      
                         Text(
                           data["nama"] ?? data["username"],
                           style: TextStyle(
@@ -430,7 +507,7 @@ void formEditUser(int index) {
 
                         const SizedBox(height: 6),
 
-                        // 🔹 Badge Role
+                      
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -470,19 +547,24 @@ void formEditUser(int index) {
 
                         const SizedBox(width: 25),
 
-                        GestureDetector(
-                          onTap: () {
-                            toggleStatus(index);
-                          },
-                          child: Text(
-                            aktif ? "Aktif" : "Nonaktif",
-                            style: TextStyle(
-                              color: aktif ? Colors.green : Colors.red,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
+                       Opacity(
+  opacity: data['id'] == UserSession.userId ? 0.5 : 1,
+  child: GestureDetector(
+    onTap: data['id'] == UserSession.userId
+        ? null
+        : () {
+            toggleStatus(index);
+          },
+    child: Text(
+      aktif ? "Aktif" : "Nonaktif",
+      style: TextStyle(
+        color: aktif ? Colors.green : Colors.red,
+        fontWeight: FontWeight.w600,
+        fontSize: 14,
+      ),
+    ),
+  ),
+),
                       ],
                     ),
                   ),

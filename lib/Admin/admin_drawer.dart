@@ -55,8 +55,8 @@ class AdminDrawer extends StatelessWidget {
 ),
 
           ListTile(
-            leading: const Icon(Icons.inventory),
-            title: const Text("Kelola Produk"),
+            leading: const Icon(Icons.restaurant_menu),
+            title: const Text("Kelola Menu"),
             onTap: () {
               Navigator.push(
                 context,
@@ -79,7 +79,7 @@ class AdminDrawer extends StatelessWidget {
           ),
 
           ListTile(
-            leading: const Icon(Icons.table_bar),
+            leading: const Icon(Icons.table_restaurant),
             title: const Text("Kelola Meja"),
             onTap: () {
               Navigator.push(
