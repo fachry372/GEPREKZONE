@@ -50,7 +50,7 @@ String? passwordError;
       users = List<Map<String, dynamic>>.from(response);
     });
   } catch (e) {
-   
+  
     showSnack("Gagal memuat data user: $e", isSuccess: false);
   }
 }
@@ -92,7 +92,7 @@ void formEditUser(int index) {
     builder: (context) {
       return UserForm(
         user: user,
-  disableRole: user['id'] == UserSession.userId, 
+  disableRole: user['id'].toString() == UserSession.userId.toString(), 
 
         onSuccess: () {
           showSnack("User berhasil diupdate");
@@ -106,7 +106,7 @@ void formEditUser(int index) {
   final user = users[index];
 
 
-  if (user['id'] == UserSession.userId) {
+  if (user['id'].toString() == UserSession.userId.toString()) {
     showSnack("Tidak bisa menonaktifkan akun yang sedang dipakai ", isSuccess: false);
     return;
   }
@@ -567,7 +567,7 @@ shape: RoundedRectangleBorder(
                        Opacity(
   opacity: isCurrentUser ? 0.5 : 1.0,
   child: GestureDetector(
-    onTap: data['id'] == UserSession.userId
+    onTap: isCurrentUser
         ? null
         : () {
             toggleStatus(index);
@@ -583,18 +583,7 @@ shape: RoundedRectangleBorder(
     
   ),
 ),
-Switch(
-                value: aktif,
-                // Jika isCurrentUser true, onChanged di-set null (otomatis disabled)
-                onChanged: isCurrentUser
-                    ? null
-                    : (bool value) {
-                        toggleStatus(index);
-                      },
-                activeColor: Colors.green,
-                inactiveThumbColor: Colors.red,
-                inactiveTrackColor: Colors.red.shade100,
-              ),
+
                       ],
                     ),
                   ),

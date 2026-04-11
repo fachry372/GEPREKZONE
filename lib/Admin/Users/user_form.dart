@@ -256,11 +256,12 @@ class _UserFormState extends State<UserForm> {
 
             const SizedBox(height: 10),
 
-            // ROLE
+       
             SizedBox(
               height: 60,
               child: DropdownButtonFormField<String>(
                 value: role,
+                disabledHint: Text(role.toUpperCase()),
                 items: ["admin", "kasir", "owner"].map((item) {
                   return DropdownMenuItem(
                     value: item,
@@ -275,7 +276,7 @@ class _UserFormState extends State<UserForm> {
                 decoration: InputDecoration(
                   labelText: "Role",
                   filled: true,
-                  fillColor: Colors.white,
+                 fillColor: widget.disableRole ? Colors.grey[200] : Colors.white,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
