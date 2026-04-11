@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Admin/Menu/kelola_produk_page.dart';
+import 'package:geprekzone/Admin/admin_page.dart';
+import 'package:geprekzone/Owner/berandaowner.dart';
+import 'package:geprekzone/Owner/data%20menu/daftar_menu.dart';
 import 'package:geprekzone/Owner/laporan%20transaksi/laporan_page.dart';
 import 'package:geprekzone/Owner/log/Log_page.dart';
 import 'package:geprekzone/login_page.dart';
@@ -42,11 +44,20 @@ class OwnerDrawer extends StatelessWidget {
           ),
 
           ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text("Beranda"),
+            onTap: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (_) => OwnerPage()));
+            },
+          ),
+
+          ListTile(
             leading: const Icon(Icons.restaurant_menu),
             title: const Text("Data Menu"),
             onTap: () {
               Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => KelolaMenuPage()));
+                  MaterialPageRoute(builder: (_) => DaftarMenu()));
             },
           ),
 

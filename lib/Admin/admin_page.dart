@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
@@ -46,6 +47,8 @@ class _AdminPageState extends State<AdminPage> {
     final user = await supabase.from('users').select();
     final meja = await supabase.from('meja').select();
 
+if (!mounted) return;
+
     setState(() {
       totalMenu = menu.length;
       totalUser = user.length;
@@ -57,6 +60,9 @@ class _AdminPageState extends State<AdminPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
     getDashboardData();
   }
 
@@ -112,10 +118,10 @@ class _AdminPageState extends State<AdminPage> {
       fontWeight: FontWeight.bold,
     ),
   ),
-  iconTheme: const IconThemeData(color: Colors.white), // warna icon menu jadi putih
+  iconTheme: const IconThemeData(color: Colors.white), 
 ),
 
-          /// CONTENT
+        
           Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
@@ -131,7 +137,7 @@ class _AdminPageState extends State<AdminPage> {
 
                   const SizedBox(height: 12),
 
-                  /// LOADING / DATA
+                  
                   isLoading
                       ? const Center(
                           child: Padding(

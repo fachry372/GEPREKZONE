@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Transaksi/pilihmeja_page.dart';
 import 'package:geprekzone/Kasir/beranda/kasir_home_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'Transaksi.dart';
 
-class PilihTipePage extends StatelessWidget {
+class PilihTipePage extends StatefulWidget {
   const PilihTipePage({super.key});
+
+  @override
+  State<PilihTipePage> createState() => _PilihTipePageState();
+}
+
+
+class _PilihTipePageState extends State<PilihTipePage> {
+  
+  @override
+  void initState() {
+    super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {

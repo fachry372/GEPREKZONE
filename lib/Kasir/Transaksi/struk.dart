@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Transaksi/Transaksi.dart';
 import 'package:geprekzone/Kasir/beranda/kasir_home_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 
-class StrukPage extends StatelessWidget {
+class StrukPage extends StatefulWidget {
 
   final List produk;
   final double total;
@@ -30,6 +31,20 @@ class StrukPage extends StatelessWidget {
     required this.tanggal,
   });
 
+  @override
+  State<StrukPage> createState() => _StrukPageState();
+}
+
+class _StrukPageState extends State<StrukPage> {
+
+   @override
+  void initState() {
+    super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
+}
+
   String rupiah(num angka) {
   final format = NumberFormat.currency(
     locale: 'id_ID',
@@ -42,7 +57,7 @@ class StrukPage extends StatelessWidget {
 Future<void> exportPDF(BuildContext context) async {
   final pdf = pw.Document();
 
-  final items = produk.where((p) => p["qty"] > 0).toList();
+  final items = widget.produk.where((p) => p["qty"] > 0).toList();
 
   pdf.addPage(
     pw.Page(
@@ -63,10 +78,10 @@ Future<void> exportPDF(BuildContext context) async {
                   style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
             ),
             pw.Divider(),
-            pw.Text("Kode Transaksi : $kodeTransaksi"),
-            pw.Text("Tanggal : $tanggal"),
-            pw.Text("Tipe Pesanan : $tipe"),
-            pw.Text("Meja : $meja"),
+            pw.Text("Kode Transaksi : ${widget.kodeTransaksi}"),
+            pw.Text("Tanggal : ${widget.tanggal}"),
+            pw.Text("Tipe Pesanan : ${widget.tipe}"),
+            pw.Text("Meja : ${widget.meja}"),
             pw.Divider(),
             ...items.map((p) {
               double subtotal = p["qty"] * p["harga"];
@@ -84,7 +99,7 @@ Future<void> exportPDF(BuildContext context) async {
               children: [
                 pw.Text("Total",
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                pw.Text(rupiah(total)),
+                pw.Text(rupiah(widget.total)),
               ],
             ),
             pw.SizedBox(height: 10),
@@ -92,14 +107,14 @@ Future<void> exportPDF(BuildContext context) async {
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text("Bayar"),
-                pw.Text(rupiah(bayar)),
+                pw.Text(rupiah(widget.bayar)),
               ],
             ),
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Text("Kembali"),
-                pw.Text(rupiah(kembali)),
+                pw.Text(rupiah(widget.kembali)),
               ],
             ),
           ],
@@ -139,7 +154,7 @@ if (!status.isGranted) {
 
 
   final file = File(
-    "${directory.path}/STRUK_${tanggalFormat}_$kodeTransaksi.pdf",
+    "${directory.path}/STRUK_${tanggalFormat}_${widget.kodeTransaksi}.pdf",
   );
 
   await file.writeAsBytes(await pdf.save());
@@ -154,12 +169,11 @@ if (!status.isGranted) {
   ),
 );
 }
-  
-  
+
   @override
   Widget build(BuildContext context) {
 
-    final items = produk.where((p) => p["qty"] > 0).toList();
+    final items = widget.produk.where((p) => p["qty"] > 0).toList();
 
     return Scaffold(
     appBar: AppBar(
@@ -208,10 +222,10 @@ if (!status.isGranted) {
 
             const Divider(),
 
-            Text("Kode Transaksi : $kodeTransaksi"),
-            Text("Tanggal : $tanggal"),
-            Text("Tipe Pesanan : $tipe"),
-            Text("Meja : $meja"),
+            Text("Kode Transaksi : ${widget.kodeTransaksi}"),
+            Text("Tanggal : ${widget.tanggal}"),
+            Text("Tipe Pesanan : ${widget.tipe}"),
+            Text("Meja : ${widget.meja}"),
 
             const Divider(),
 
@@ -233,7 +247,7 @@ if (!status.isGranted) {
               children: [
                 const Text("Total",
                     style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(rupiah(total),
+                Text(rupiah(widget.total),
                     style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
@@ -244,7 +258,7 @@ if (!status.isGranted) {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Bayar"),
-                Text(currencyFormatter.format(bayar)),
+                Text(currencyFormatter.format(widget.bayar)),
               ],
             ),
 
@@ -252,7 +266,7 @@ if (!status.isGranted) {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text("Kembali"),
-                Text(currencyFormatter.format(kembali)),
+                Text(currencyFormatter.format(widget.kembali)),
               ],
             ),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Transaksi.dart';
 
@@ -37,6 +38,9 @@ class _PilihMejaPageState extends State<PilihMejaPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
     getMeja();
   }
   @override

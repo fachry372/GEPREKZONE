@@ -40,6 +40,7 @@ String? passwordError;
 }
 
  Future<void> getUsers() async {
+  try {
     final response = await supabase
         .from('users')
         .select()
@@ -48,11 +49,17 @@ String? passwordError;
     setState(() {
       users = List<Map<String, dynamic>>.from(response);
     });
+  } catch (e) {
+   
+    showSnack("Gagal memuat data user: $e", isSuccess: false);
   }
-
+}
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
     getUsers();
   }
 
@@ -158,21 +165,30 @@ void formEditUser(int index) {
                     onPressed: () async {
                       Navigator.pop(context);
 
-                      await supabase.rpc('toggle_user_status', params: {
-                        'p_id': users[index]['id'],
-                      });
+                     final targetUser = users[index]; 
+  final String targetUsername = targetUser['username'];
+  final bool isAktifSekarang = targetUser['status'] == 'aktif';
 
-                      await LogService.log(
-                        "${aktif ? 'Menonaktifkan' : 'Mengaktifkan'} user: ${users[index]['username']}",
-                      );
+  try {
+   
+    await supabase.rpc('toggle_user_status', params: {
+      'p_id': targetUser['id'],
+    });
 
-                      getUsers();
+ 
+    String aksi = isAktifSekarang ? "Menonaktifkan" : "Mengaktifkan";
+    await LogService.log("$aksi User: $targetUsername");
 
-                      showSnack(
-                        aktif
-                            ? "User berhasil dinonaktifkan"
-                            : "User berhasil diaktifkan",
-                      );
+    
+    getUsers();
+    showSnack(
+      isAktifSekarang
+          ? "User $targetUsername berhasil dinonaktifkan"
+          : "User $targetUsername berhasil diaktifkan",
+    );
+  } catch (e) {
+    showSnack("Gagal mengubah status: $e", isSuccess: false);
+  }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
@@ -464,6 +480,7 @@ void formEditUser(int index) {
               itemBuilder: (context, index) {
                 var data = filteredUsers[index];
                 bool aktif = data["status"].toString() == "aktif";
+                bool isCurrentUser = data['id'].toString() == UserSession.userId.toString();
 
                 return Card(
                   color: Colors.white,
@@ -548,7 +565,7 @@ shape: RoundedRectangleBorder(
                         const SizedBox(width: 25),
 
                        Opacity(
-  opacity: data['id'] == UserSession.userId ? 0.5 : 1,
+  opacity: isCurrentUser ? 0.5 : 1.0,
   child: GestureDetector(
     onTap: data['id'] == UserSession.userId
         ? null
@@ -563,8 +580,21 @@ shape: RoundedRectangleBorder(
         fontSize: 14,
       ),
     ),
+    
   ),
 ),
+Switch(
+                value: aktif,
+                // Jika isCurrentUser true, onChanged di-set null (otomatis disabled)
+                onChanged: isCurrentUser
+                    ? null
+                    : (bool value) {
+                        toggleStatus(index);
+                      },
+                activeColor: Colors.green,
+                inactiveThumbColor: Colors.red,
+                inactiveTrackColor: Colors.red.shade100,
+              ),
                       ],
                     ),
                   ),

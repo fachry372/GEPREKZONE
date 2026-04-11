@@ -11,6 +11,7 @@ void main() async {
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNqeG9iZ3NwenRicm1zcGVzYnNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzQ2MjUsImV4cCI6MjA4ODY1MDYyNX0.52GydkLoINjVlR7_lcFJJLimgvrrXIHRiJVMwe1uOlc',
   );
 
+
   runApp(const MyApp());
 }
 
@@ -21,10 +22,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Lontar POS',
+      title: 'GeprekZone',
       theme: ThemeData(
         primaryColor: Colors.red,
       ),
+
+     
+      initialRoute: '/login', 
+      
+     
+      routes: {
+        '/login': (context) => const LoginPage(),
+       
+      },
       home: LoginPage(),
     );
   }

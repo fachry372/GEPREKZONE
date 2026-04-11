@@ -67,13 +67,39 @@ class _FormMejaState extends State<FormMeja> {
       }
     }
 
-    if (isEdit) {
-      await supabase.from('meja').update({
-        'nomor_meja': nomor.text,
-        'status': status,
-      }).eq('id', widget.meja!["id"]);
+   if (isEdit) {
 
-      await LogService.log("Mengubah status meja ${nomor.text} menjadi $status");
+  String nomorLama = widget.meja!["nomor_meja"].toString().trim();
+  String nomorBaru = nomor.text.trim();
+  String statusLama = widget.meja!["status"].toString().trim();
+  String statusBaru = status.trim();
+
+  String pesanLog = "";
+
+
+  if (nomorLama != nomorBaru && statusLama != statusBaru) {
+    pesanLog = "Mengubah nomor meja dari $nomorLama ke $nomorBaru dan status menjadi $statusBaru";
+  } else if (nomorLama != nomorBaru) {
+    pesanLog = "Mengubah nomor meja dari $nomorLama ke $nomorBaru";
+  } else if (statusLama != statusBaru) {
+    pesanLog = "Mengubah status meja $nomorLama menjadi $statusBaru";
+  }
+
+  // Debugging: Cetak ke console untuk memastikan logika jalan
+  print("DEBUG: Nomor Lama: $nomorLama, Nomor Baru: $nomorBaru");
+  print("DEBUG: Pesan Log: $pesanLog");
+
+  // Update Database
+  await supabase.from('meja').update({
+    'nomor_meja': nomorBaru,
+    'status': statusBaru,
+  }).eq('id', widget.meja!["id"]);
+
+  // KIRIM LOG HANYA JIKA ADA PERUBAHAN
+  if (pesanLog.isNotEmpty) {
+    await LogService.log(pesanLog);
+  }
+
     } else {
       await supabase.from('meja').insert({
         'nomor_meja': nomor.text,

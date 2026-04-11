@@ -1,18 +1,44 @@
+import 'package:flutter/material.dart';
+
 class UserSession {
-  static Map<String, dynamic>? currentUser;
+  static String? userId;
+  static String? username;
+  static String? role; 
+  static String? nama;
 
-  static void fromJson(Map<String, dynamic> user) {
-    currentUser = user;
+ 
+  static void fromJson(Map<String, dynamic> json) {
+    userId   = json['id'].toString(); 
+    username = json['username'];
+    role     = json['role'].toString().toLowerCase(); 
+    nama     = json['nama'];
   }
 
-
-  static void logout() {
-    currentUser = null;
+  static void hapusSession() {
+    userId = null;
+    username = null;
+    role = null;
+    nama = null;
   }
 
+  static bool isLoggedIn() => userId != null;
 
-  static bool get isLoggedIn => currentUser != null;
-  static int? get userId => currentUser?['id'];
-  static String? get role => currentUser?['role'];
-  static String? get username => currentUser?['username'];
+ static void cekAkses(BuildContext context, List<String> roleDiizinkan) {
+    if (!isLoggedIn()) {
+      _kirimKeLogin(context, "Silakan login terlebih dahulu");
+      return;
+    }
+
+    if (!roleDiizinkan.contains(role)) {
+      
+      _kirimKeLogin(context, "Akses Ditolak: Role $role tidak diizinkan di sini");
+    }
+  }
+
+static void _kirimKeLogin(BuildContext context, String pesan) {
+  Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(pesan)),
+  );
+}
 }

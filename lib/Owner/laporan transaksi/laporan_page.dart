@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/laporan%20transaksi/Detail_laporan.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -30,6 +31,9 @@ bool isLoading = false;
   @override
   void initState() {
     super.initState();
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['owner']);
+  });
     getData();
   }
 

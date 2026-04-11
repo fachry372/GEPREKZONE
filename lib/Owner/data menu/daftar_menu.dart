@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Menu/form_menu.dart';
-import 'package:geprekzone/Admin/admin_drawer.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/Owner/owner_drawer.dart';
 import 'package:geprekzone/auth/session.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class KelolaMenuPage extends StatefulWidget {
-  const KelolaMenuPage({super.key});
+class DaftarMenu extends StatefulWidget {
+  const DaftarMenu({super.key});
 
   @override
-  State<KelolaMenuPage> createState() => _KelolaMenuPageState();
+  State<DaftarMenu> createState() => _DaftarMenuState();
 }
 
-class _KelolaMenuPageState extends State<KelolaMenuPage> {
+class _DaftarMenuState extends State<DaftarMenu> {
   final ImagePicker picker = ImagePicker();
 
   final supabase = Supabase.instance.client;
@@ -35,23 +35,13 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-    UserSession.cekAkses(context, ['admin']);
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['owner']);
   });
     getProducts();
   }
 
-  Future<String?> uploadImage(File file) async {
-    final fileName = DateTime.now().millisecondsSinceEpoch.toString();
-
-    await supabase.storage.from('product-images').upload(fileName, file);
-
-    final imageUrl = supabase.storage
-        .from('product-images')
-        .getPublicUrl(fileName);
-
-    return imageUrl;
-  }
+ 
 
   TextEditingController searchController = TextEditingController();
 
@@ -70,109 +60,6 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
     }).toList();
   }
 
-  Future<File?> pickImage() async {
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-    if (image != null) {
-      return File(image.path);
-    }
-
-    return null;
-  }
-
-  void formMenu({Map<String, dynamic>? product}) async {
-    final result = await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (_) => FormProduk(product: product),
-    );
-
-    if (result == true) {
-      getProducts();
-    }
-  }
-
-  void hapusMenu(int id, {String? namaProduk}) async {
-  try {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-
-    await supabase.rpc('delete_product', params: {'p_id': id});
-
-    
-    if (mounted) Navigator.pop(context);
-
-  
-    await LogService.log("Menghapus menu: ${namaProduk ?? 'Produk dengan ID $id'}");
-
-   
-    getProducts();
-    
-    
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Menu berhasil dihapus"),
-          backgroundColor: Colors.green,
-        ),
-      );
-    }
-  } on PostgrestException catch (e) {
-    
-    if (mounted) Navigator.pop(context);
-
-   
-    if (e.code == '23503' || e.message.toLowerCase().contains('foreign key')) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Menu tidak bisa dihapus karena sudah terhubung ke transaksi"),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    } else {
-   
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal menghapus: ${e.message}")),
-        );
-      }
-    }
-  } catch (e) {
-  
-    if (mounted) Navigator.pop(context);
-    
- 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Terjadi kesalahan: $e")),
-      );
-    }
-  }
-}
-
-
-void konfirmasiHapus(int id, String nama) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: Colors.transparent, 
-    builder: (context) {
-      return KonfirmasiHapus(
-        namaProduk: nama,
-        onConfirm: () {
-          Navigator.pop(context); 
-          hapusMenu(id, namaProduk: nama); 
-        },
-      );
-    },
-  );
-}
 
 String formatRupiah(num angka) {
   return NumberFormat.currency(
@@ -188,13 +75,7 @@ String formatRupiah(num angka) {
     var filteredProducts = getFilteredProducts();
 
     return Scaffold(
-      drawer: const AdminDrawer(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => formMenu(),
-        backgroundColor: Colors.red,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text("Tambah Menu", style: TextStyle(color: Colors.white)),
-      ),
+      drawer: const OwnerDrawer(),
       body: Column(
         children: [
           Container(
@@ -220,7 +101,7 @@ String formatRupiah(num angka) {
                   ),
                 ),
                 const Text(
-                  "Kelola Menu",
+                  "Daftar Menu",
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -419,38 +300,7 @@ String formatRupiah(num angka) {
                           ),
 
                         
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  formMenu(product: product);
-                                },
-                                child: const Text(
-                                  "Edit",
-                                  style: TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              GestureDetector(
-                                onTap: () {
-                                  konfirmasiHapus(product["id"],product["nama_produk"]);
-                                },
-                                child: const Text(
-                                  "Hapus",
-                                  style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                       
                         ),
                       );
                     },
@@ -538,7 +388,7 @@ class KonfirmasiHapus extends StatelessWidget {
                     elevation: 0,
                   ),
                   child: const Text(
-                    "Hapus",
+                    "Hapus Sekarang",
                     style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),

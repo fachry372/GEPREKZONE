@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:intl/intl.dart';
 import 'package:geprekzone/Kasir/Transaksi/struk.dart';
 
@@ -23,6 +24,16 @@ class PembayaranDialog extends StatefulWidget {
 }
 
 class _PembayaranDialogState extends State<PembayaranDialog> {
+
+   @override
+  void initState() {
+    super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
+}
+
+
   final currencyFormatter = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',

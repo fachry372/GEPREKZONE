@@ -89,61 +89,74 @@ class _FormProdukState extends State<FormProduk> {
   }
 
   void simpan() async {
-    if (!_formKey.currentState!.validate()) return;
+  if (!_formKey.currentState!.validate()) return;
 
-    setState(() => isLoading = true);
+  setState(() => isLoading = true);
 
-    try {
-      String? imageUrl;
-      if (foto != null) imageUrl = await uploadImage(foto!);
+  try {
+    String? imageUrl;
+    if (foto != null) imageUrl = await uploadImage(foto!);
 
-      double hargaBersih = double.parse(harga.text.replaceAll('.', ''));
-      int stokBersih = int.parse(stok.text);
+    double hargaBaru = double.parse(harga.text.replaceAll('.', ''));
+    int stokBaru = int.parse(stok.text);
+    String namaBaru = nama.text;
 
-      if (isEdit) {
-        await supabase.rpc(
-          'update_product',
-          params: {
-            'p_id': widget.product!["id"],
-            'p_nama': nama.text,
-            'p_harga': hargaBersih,
-            'p_kategori': kategori,
-            'p_image': imageUrl ?? oldImage,
-            'p_stok': stokBersih,
-          },
-        );
+    if (isEdit) {
+  
+      String namaLama = widget.product!["nama_produk"];
+      double hargaLama = widget.product!["harga"].toDouble();
+      int stokLama = widget.product!["stok"];
 
-        await LogService.log(
-          "Mengedit menu: ${nama.text}, Harga: $hargaBersih",
-        );
-      } else {
-        await supabase.rpc(
-          'insert_product',
-          params: {
-            'p_nama': nama.text,
-            'p_harga': hargaBersih,
-            'p_kategori': kategori,
-            'p_image': imageUrl,
-            'p_stok': stokBersih,
-          },
-        );
+    
+      List<String> perubahan = [];
+      if (namaLama != namaBaru) perubahan.add("nama dari '$namaLama' ke '$namaBaru'");
+      if (hargaLama != hargaBaru) perubahan.add("harga dari ${currencyFormatter.format(hargaLama)} ke ${currencyFormatter.format(hargaBaru)}");
+      if (stokLama != stokBaru) perubahan.add("stok dari $stokLama ke $stokBaru");
 
-        await LogService.log(
-          "Menambahkan menu baru: ${nama.text}, Harga: $hargaBersih",
-        );
+   
+      await supabase.rpc(
+        'update_product',
+        params: {
+          'p_id': widget.product!["id"],
+          'p_nama': namaBaru,
+          'p_harga': hargaBaru,
+          'p_kategori': kategori,
+          'p_image': imageUrl ?? oldImage,
+          'p_stok': stokBaru,
+        },
+      );
+
+   
+      if (perubahan.isNotEmpty) {
+        await LogService.log("Mengubah menu '${namaLama}': ${perubahan.join(', ')}");
       }
+    } else {
+   
+      await supabase.rpc(
+        'insert_product',
+        params: {
+          'p_nama': namaBaru,
+          'p_harga': hargaBaru,
+          'p_kategori': kategori,
+          'p_image': imageUrl,
+          'p_stok': stokBaru,
+        },
+      );
 
-      if (mounted) Navigator.pop(context, true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Gagal menyimpan: $e")));
-      }
-    } finally {
-      if (mounted) setState(() => isLoading = false);
+      await LogService.log("Menambahkan menu baru: $namaBaru dengan stok $stokBaru");
     }
+
+    if (mounted) Navigator.pop(context, true);
+  } catch (e) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Gagal menyimpan: $e"), backgroundColor: Colors.red),
+      );
+    }
+  } finally {
+    if (mounted) setState(() => isLoading = false);
   }
+}
 
   @override
   Widget build(BuildContext context) {

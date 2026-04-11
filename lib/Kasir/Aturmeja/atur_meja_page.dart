@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Transaksi/Transaksi.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
@@ -49,6 +50,9 @@ class _PilihAturMejaPageState extends State<AturMejaPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
     getMeja();
   }
   @override

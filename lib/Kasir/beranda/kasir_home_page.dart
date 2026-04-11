@@ -3,6 +3,7 @@ import 'package:geprekzone/Kasir/Transaksi/Transaksi.dart';
 import 'package:geprekzone/Kasir/beranda/Riwayat_page.dart';
 import 'package:geprekzone/Kasir/beranda/menu_page.dart';
 import 'package:geprekzone/Kasir/kasir_drawer.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -28,6 +29,9 @@ class _KasirHomepageState extends State<KasirHomepage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
     fetchDashboardData();
   }
 
@@ -65,6 +69,8 @@ class _KasirHomepageState extends State<KasirHomepage> {
       int terisi = mejaResponse
           .where((m) => m['status'].toString().toLowerCase().trim() == 'terisi')
           .length;
+
+if (!mounted) return;
 
       setState(() {
         totalTransaksi = trxResponse.length;

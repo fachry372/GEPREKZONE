@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/beranda/detailtransaksi_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -24,6 +25,9 @@ bool isLoading = false;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
     getData();
   }
 

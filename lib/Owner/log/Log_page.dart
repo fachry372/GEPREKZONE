@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/log/detaillog_page.dart';
 import 'package:geprekzone/Owner/owner_drawer.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LogPage extends StatefulWidget {
@@ -48,6 +49,9 @@ Future<void> pilihTanggal(bool isStart) async {
   @override
   void initState() {
     super.initState();
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['owner']);
+  });
     getLogs();
   }
 
@@ -161,6 +165,17 @@ Future<void> pilihTanggal(bool isStart) async {
   
 
   await getLogs();
+}
+
+void tampilkanDetail(Map logData) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, 
+    backgroundColor: Colors.transparent, 
+    builder: (context) {
+      return DetailLogSheet(log: logData);
+    },
+  );
 }
 
   @override
@@ -323,12 +338,7 @@ Future<void> pilihTanggal(bool isStart) async {
 Widget itemLog(String username, String activity, String tanggal, Map log) {
   return InkWell(
     onTap: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => DetailLogPage(log: log),
-        ),
-      );
+      tampilkanDetail(log);
     },
     borderRadius: BorderRadius.circular(12),
     child: Container(

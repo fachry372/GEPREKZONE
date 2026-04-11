@@ -98,9 +98,14 @@ class _UserFormState extends State<UserForm> {
         'p_password': passwordController.text,
       });
       
-       await LogService.log(
-        "Mengubah user: ${widget.user!['username']} menjadi ${usernameController.text} (role: $role)"
-      );
+      String logMsg = "Mengubah User: ${widget.user!['username']}";
+      if (widget.user!['username'] != usernameController.text) {
+        logMsg += " menjadi ${usernameController.text}";
+      }
+      logMsg += " (Role: ${role.toUpperCase()})";
+
+      await LogService.log(logMsg);
+
     } else {
       await supabase.rpc('insert_user', params: {
         'p_username': usernameController.text,
@@ -111,7 +116,7 @@ class _UserFormState extends State<UserForm> {
 
       
       await LogService.log(
-        "Menambahkan user baru: ${usernameController.text} (role: $role)"
+        "Menambahkan User Baru: ${usernameController.text} sebagai ${role.toUpperCase()}"
       );
     }
 

@@ -85,6 +85,9 @@ Future<void> getProduk() async {
 @override
 void initState() {
   super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
   getProduk();
 }
 

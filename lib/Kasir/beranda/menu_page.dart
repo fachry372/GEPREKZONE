@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MenuPage extends StatefulWidget {
@@ -19,6 +20,9 @@ class _MenuPageState extends State<MenuPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['kasir']);
+  });
     getData();
   }
 

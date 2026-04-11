@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geprekzone/Admin/Meja/form_meja.dart';
 import 'package:geprekzone/Admin/admin_drawer.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class KelolaMejaPage extends StatefulWidget {
@@ -33,6 +34,9 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
     getMeja();
   }
 

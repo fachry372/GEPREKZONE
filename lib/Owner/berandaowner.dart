@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/owner_drawer.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
@@ -53,6 +54,8 @@ int logAktivitas = 0;
     final produkRes = await supabase.from('products').select('id');
     final logRes = await supabase.from('log').select('id');
 
+if (!mounted) return;
+
     setState(() {
       totalTransaksi = transaksiRes.length;
       pendapatan = "Rp ${totalPendapatan.toStringAsFixed(0)}";
@@ -73,6 +76,9 @@ int logAktivitas = 0;
 @override
 void initState() {
   super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['owner']);
+  });
   getDashboardData();
 }
 
