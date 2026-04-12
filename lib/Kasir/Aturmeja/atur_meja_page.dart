@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:geprekzone/Kasir/Transaksi/Transaksi.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,7 +28,7 @@ class _PilihAturMejaPageState extends State<AturMejaPage> {
     final response = await supabase
         .from('meja')
         .select()
-        .order('id', ascending: true);
+        .order('nomor_meja', ascending: true);
 
     setState(() {
       meja = List<Map<String, dynamic>>.from(response);
@@ -36,15 +36,37 @@ class _PilihAturMejaPageState extends State<AturMejaPage> {
     });
   }
 
-  Future<void> updateStatusMeja(int id, String statusSekarang) async {
+  Future<void> updateStatusMeja(int id, String statusSekarang,String nomorMeja) async {
   String statusBaru = statusSekarang == "terisi" ? "kosong" : "terisi";
+try {
+ 
+    await supabase
+        .from('meja')
+        .update({"status": statusBaru})
+        .eq('id', id);
 
-  await supabase
-      .from('meja')
-      .update({"status": statusBaru})
-      .eq('id', id);
+ 
+    await LogService.log(
+      "Mengubah status Meja $nomorMeja dari '$statusSekarang' menjadi '$statusBaru'."
+    );
 
-  getMeja(); 
+    getMeja(); 
+  } catch (e) {
+    
+    await LogService.log("GAGAL mengubah status Meja $nomorMeja: $e");
+  }
+}
+
+void tampilkanPesan(String nomor, String status) {
+  if (!mounted) return;
+  ScaffoldMessenger.of(context).clearSnackBars();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text("Status meja $nomor berhasil diubah menjadi $status"),
+      backgroundColor: Colors.green,
+    
+    ),
+  );
 }
 
   @override
@@ -66,7 +88,7 @@ class _PilihAturMejaPageState extends State<AturMejaPage> {
         iconTheme: const IconThemeData(
     color: Colors.white, 
   ),
-        title: const Text("Pilih Meja",style: TextStyle(color: Colors.white),),
+        title: const Text("Atur Meja",style: TextStyle(color: Colors.white),),
       ),
 
     body: isLoading
@@ -124,84 +146,93 @@ class _PilihAturMejaPageState extends State<AturMejaPage> {
 
           return InkWell(
 
-           onTap: () {
+         onTap: () {
   showModalBottomSheet(
     context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
+    backgroundColor: Colors.transparent, 
     builder: (context) {
-      return Padding(
+      return Container(
         padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-
-            /// HANDLE
+            
             Container(
-              width: 50,
-              height: 5,
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
 
-            const SizedBox(height: 15),
-
-            /// TITLE
-            Text(
-              "Ubah Status Meja",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+         
+            const Text(
+              "Ubah Status Meja?",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
+            
+            const SizedBox(height: 8),
 
-            const SizedBox(height: 10),
-
-            /// INFO
+           
             Text(
-              "Meja ${item["nomor_meja"]} akan diubah menjadi ${terisi ? "Kosong" : "Terisi"}",
+              "Apakah Anda yakin ingin mengubah status Meja ${item["nomor_meja"]} menjadi ${terisi ? "Kosong" : "Terisi"}?",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.grey[600]),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            /// BUTTON
             Row(
               children: [
-
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text("Batal"),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 235, 212, 214), 
+                      side: BorderSide.none,      
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: const Text("Batal", style: TextStyle(color: Colors.black)),
                   ),
                 ),
-
-                const SizedBox(width: 10),
-
+                const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
+                 
+onPressed: () async {
+  String nomorMeja = item["nomor_meja"].toString();
+  String statusLama = item["status"]; 
+  String statusBaruIndo = terisi ? "Kosong" : "Terisi";
+
+  Navigator.pop(context); 
+
+
+  await updateStatusMeja(item["id"], statusLama, nomorMeja);
+  
+  tampilkanPesan(nomorMeja, statusBaruIndo);
+},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      elevation: 0,
                     ),
-                    onPressed: () async {
-                      await updateStatusMeja(
-                          item["id"], item["status"]);
-
-                      Navigator.pop(context);
-                    },
                     child: const Text(
                       "Ya, Ubah",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
               ],
             ),
-
+            const SizedBox(height: 10),
           ],
         ),
       );

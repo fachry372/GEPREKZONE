@@ -172,7 +172,9 @@ class _KelolaMejaPageState extends State<KelolaMejaPage> {
 
       try {
         await supabase.from('meja').delete().eq('id', dataMeja["id"]);
-        await LogService.log("Menghapus meja nomor ${dataMeja["nomor_meja"]}");
+        await LogService.log(
+        "Menghapus meja nomor ${dataMeja["nomor_meja"]}"
+      );
 
         if (mounted) {
           getMeja();

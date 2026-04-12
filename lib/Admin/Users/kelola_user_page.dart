@@ -328,7 +328,7 @@ void formEditUser(int index) {
                 const SizedBox(height: 10),
                 Row(
                   children: [
-                    // FILTER STATUS
+                   
                     Expanded(
                       child: SizedBox(
                         height: 55,
@@ -463,133 +463,136 @@ void formEditUser(int index) {
             ),
           ),
           Expanded(
-  child: filteredUsers.isEmpty
-      ? const Center(
-          child: Text(
-            "Data tidak ditemukan",
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
+  child: RefreshIndicator(
+    onRefresh: getUsers,
+    child: filteredUsers.isEmpty
+        ? const Center(
+            child: Text(
+              "Data tidak ditemukan",
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+              ),
             ),
-          ),
-        )
-      : ListView.builder(
-        
-                  padding: const EdgeInsets.only(top: 0, bottom: 80, left: 0, right: 0),
-              itemCount: filteredUsers.length,
-              itemBuilder: (context, index) {
-                var data = filteredUsers[index];
-                bool aktif = data["status"].toString() == "aktif";
-                bool isCurrentUser = data['id'].toString() == UserSession.userId.toString();
-
-                return Card(
-                  color: Colors.white,
-elevation: 3,
-shadowColor: Colors.black26,
-shape: RoundedRectangleBorder(
-  borderRadius: BorderRadius.circular(12),
-),
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.red,
-                      child: const Icon(Icons.person, color: Colors.white),
+          )
+        : ListView.builder(
+          
+                    padding: const EdgeInsets.only(top: 0, bottom: 80, left: 0, right: 0),
+                itemCount: filteredUsers.length,
+                itemBuilder: (context, index) {
+                  var data = filteredUsers[index];
+                  bool aktif = data["status"].toString() == "aktif";
+                  bool isCurrentUser = data['id'].toString() == UserSession.userId.toString();
+    
+                  return Card(
+                    color: Colors.white,
+    elevation: 3,
+    shadowColor: Colors.black26,
+    shape: RoundedRectangleBorder(
+    borderRadius: BorderRadius.circular(12),
+    ),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-
-                    title: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                 
-                        Text(
-                          data["username"],
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-
-                        const SizedBox(height: 2),
-
-                      
-                        Text(
-                          data["nama"] ?? data["username"],
-                          style: TextStyle(
-                            color: Colors.grey[700],
-                            fontSize: 12,
-                          ),
-                        ),
-
-                        const SizedBox(height: 6),
-
-                      
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.red[300],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            data["role"],
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.red,
+                        child: const Icon(Icons.person, color: Colors.white),
+                      ),
+    
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                   
+                          Text(
+                            data["username"],
                             style: const TextStyle(
-                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+    
+                          const SizedBox(height: 2),
+    
+                        
+                          Text(
+                            data["nama"] ?? data["username"],
+                            style: TextStyle(
+                              color: Colors.grey[700],
                               fontSize: 12,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            formEditUser(index);
-                          },
-                          child: const Text(
-                            "Edit",
-                            style: TextStyle(
-                              color: Colors.blue,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
+    
+                          const SizedBox(height: 6),
+    
+                        
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.red[300],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              data["role"],
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
-                        ),
-
-                        const SizedBox(width: 25),
-
-                       Opacity(
-  opacity: isCurrentUser ? 0.5 : 1.0,
-  child: GestureDetector(
-    onTap: isCurrentUser
-        ? null
-        : () {
-            toggleStatus(index);
-          },
-    child: Text(
-      aktif ? "Aktif" : "Nonaktif",
-      style: TextStyle(
-        color: aktif ? Colors.green : Colors.red,
-        fontWeight: FontWeight.w600,
-        fontSize: 14,
+                        ],
+                      ),
+    
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              formEditUser(index);
+                            },
+                            child: const Text(
+                              "Edit",
+                              style: TextStyle(
+                                color: Colors.blue,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+    
+                          const SizedBox(width: 25),
+    
+                         Opacity(
+    opacity: isCurrentUser ? 0.5 : 1.0,
+    child: GestureDetector(
+      onTap: isCurrentUser
+          ? null
+          : () {
+              toggleStatus(index);
+            },
+      child: Text(
+        aktif ? "Aktif" : "Nonaktif",
+        style: TextStyle(
+          color: aktif ? Colors.green : Colors.red,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
+      
+    ),
     ),
     
-  ),
-),
-
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              ),
+  ),
           ),
         ],
       ),

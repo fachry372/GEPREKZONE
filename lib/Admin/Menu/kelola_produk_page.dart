@@ -89,6 +89,18 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
 
     if (result == true) {
       getProducts();
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(product == null 
+                ? "Menu berhasil ditambahkan!" 
+                : "Menu berhasil diperbarui!"),
+            backgroundColor: Colors.green,
+            
+          ),
+        );
+      }
     }
   }
 
@@ -107,8 +119,9 @@ class _KelolaMenuPageState extends State<KelolaMenuPage> {
     if (mounted) Navigator.pop(context);
 
   
-    await LogService.log("Menghapus menu: ${namaProduk ?? 'Produk dengan ID $id'}");
-
+   await LogService.log(
+      " Menghapus menu: ${namaProduk ?? 'Produk dengan ID $id'}"
+    );
    
     getProducts();
     

@@ -190,7 +190,7 @@ if (!mounted) return;
 
                       infoCard(
                         Icons.payment,
-                        "Pendapatan",
+                        "Pendapatan Hari Ini",
                         currencyFormatter.format(totalPendapatan),
                         null,
                       ),

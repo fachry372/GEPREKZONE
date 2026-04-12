@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'dart:io';
@@ -27,14 +28,21 @@ class _FormProdukState extends State<FormProduk> {
   File? foto;
   String? oldImage;
   bool isLoading = false;
+  String status = "aktif";
+  String? errorNama; 
 
   final NumberFormat currencyFormatter = NumberFormat.decimalPattern('id_ID');
 
   bool get isEdit => widget.product != null;
 
+
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
 
     nama = TextEditingController(
       text: isEdit ? widget.product!["nama_produk"] : "",
@@ -49,6 +57,8 @@ class _FormProdukState extends State<FormProduk> {
     );
     kategori = isEdit ? widget.product!["kategori"] : "Makanan";
     oldImage = isEdit ? widget.product!["image"] : null;
+
+    status = isEdit ? (widget.product!["status"] ?? "aktif") : "aktif";
   }
 
   void _onHargaChanged(String value) {
@@ -89,6 +99,9 @@ class _FormProdukState extends State<FormProduk> {
   }
 
   void simpan() async {
+
+  setState(() => errorNama = null);
+
   if (!_formKey.currentState!.validate()) return;
 
   setState(() => isLoading = true);
@@ -99,7 +112,27 @@ class _FormProdukState extends State<FormProduk> {
 
     double hargaBaru = double.parse(harga.text.replaceAll('.', ''));
     int stokBaru = int.parse(stok.text);
-    String namaBaru = nama.text;
+    String namaBaru = nama.text.trim();
+
+    final cekmenu = await supabase
+        .from('products')
+        .select('id, nama_produk')
+        .eq('nama_produk', namaBaru)
+        .maybeSingle();
+
+   if (cekmenu != null) {
+     
+      if (!isEdit || (isEdit && cekmenu['id'] != widget.product!['id'])) {
+        setState(() {
+          isLoading = false;
+          errorNama = "Nama menu sudah ada!"; 
+        });
+        
+        
+        _formKey.currentState!.validate(); 
+        return;
+      }
+    }
 
     if (isEdit) {
   
@@ -123,13 +156,16 @@ class _FormProdukState extends State<FormProduk> {
           'p_kategori': kategori,
           'p_image': imageUrl ?? oldImage,
           'p_stok': stokBaru,
+          'p_status': status,
         },
       );
 
    
       if (perubahan.isNotEmpty) {
-        await LogService.log("Mengubah menu '${namaLama}': ${perubahan.join(', ')}");
-      }
+    await LogService.log(
+      "Mengubah menu '$namaLama': ${perubahan.join(', ')}"
+    );
+  }
     } else {
    
       await supabase.rpc(
@@ -140,6 +176,7 @@ class _FormProdukState extends State<FormProduk> {
           'p_kategori': kategori,
           'p_image': imageUrl,
           'p_stok': stokBaru,
+          'p_status': status,
         },
       );
 
@@ -211,7 +248,7 @@ class _FormProdukState extends State<FormProduk> {
 
                 TextFormField(
                   controller: nama,
-                  decoration: inputStyle("Nama Produk"),
+                  decoration: inputStyle("Nama Menu").copyWith(errorText: errorNama),
                   validator: (value) => (value == null || value.isEmpty)
                       ? "Nama tidak boleh kosong"
                       : null,
@@ -248,6 +285,19 @@ class _FormProdukState extends State<FormProduk> {
                   onChanged: (value) => setState(() => kategori = value!),
                   decoration: inputStyle("Kategori"),
                 ),
+
+                const SizedBox(height: 12),
+DropdownButtonFormField<String>(
+  value: status,
+  items: const [
+    DropdownMenuItem(value: "aktif", child: Text("Aktif")),
+    DropdownMenuItem(value: "nonaktif", child: Text("Nonaktif")),
+    
+  ],
+  onChanged: (value) => setState(() => status = value!),
+  decoration: inputStyle("Status Menu"),
+),
+
                 const SizedBox(height: 20),
 
                 Row(

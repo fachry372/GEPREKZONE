@@ -39,7 +39,12 @@ bool isLoading = false;
   try {
     var query = supabase
         .from('transactions')
-        .select()
+        .select('''
+          *,
+          meja (
+            nomor_meja
+          )
+        ''') // Tambahkan join ke tabel meja di sini
         .gte('created_at', startDate?.toIso8601String() ?? '2000-01-01')
         .lte(
           'created_at',
@@ -56,7 +61,7 @@ bool isLoading = false;
       data = res;
     });
   } catch (e) {
-    print(e);
+    print("Error getData: $e");
   } finally {
     setState(() {
       isLoading = false;

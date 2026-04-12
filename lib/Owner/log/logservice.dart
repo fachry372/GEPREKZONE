@@ -14,7 +14,7 @@ class LogService {
 
     try {
    
-      String pesanLengkap = "[${UserSession.role?.toUpperCase()}] ${UserSession.nama}: $aktivitas";
+      String pesanLengkap = "[${UserSession.role?.toUpperCase()}] ${UserSession.username}: $aktivitas";
 
       
       await supabase.from('log').insert({

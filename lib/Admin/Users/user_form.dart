@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserForm extends StatefulWidget {
@@ -40,6 +41,10 @@ class _UserFormState extends State<UserForm> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
 
     usernameController =
         TextEditingController(text: widget.user?["username"] ?? "");

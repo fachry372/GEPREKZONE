@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/log/logservice.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class FormMeja extends StatefulWidget {
@@ -26,7 +27,10 @@ class _FormMejaState extends State<FormMeja> {
   @override
   void initState() {
     super.initState();
-
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    UserSession.cekAkses(context, ['admin']);
+  });
+  
     if (isEdit) {
       nomor.text = widget.meja!["nomor_meja"].toString();
       status = widget.meja!["status"];
@@ -85,17 +89,17 @@ class _FormMejaState extends State<FormMeja> {
     pesanLog = "Mengubah status meja $nomorLama menjadi $statusBaru";
   }
 
-  // Debugging: Cetak ke console untuk memastikan logika jalan
+
   print("DEBUG: Nomor Lama: $nomorLama, Nomor Baru: $nomorBaru");
   print("DEBUG: Pesan Log: $pesanLog");
 
-  // Update Database
+
   await supabase.from('meja').update({
     'nomor_meja': nomorBaru,
     'status': statusBaru,
   }).eq('id', widget.meja!["id"]);
 
-  // KIRIM LOG HANYA JIKA ADA PERUBAHAN
+
   if (pesanLog.isNotEmpty) {
     await LogService.log(pesanLog);
   }
@@ -181,13 +185,12 @@ class _FormMejaState extends State<FormMeja> {
           const SizedBox(height: 25),
 
           
-        /// BUTTONS SECTION
 Row(
   children: [
-    // Tombol Batal
+  
     Expanded(
       child: ElevatedButton(
-        // Tombol batal juga di-disable saat sedang loading
+        
         onPressed: isLoading ? null : () => Navigator.pop(context),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 235, 212, 214),
@@ -204,7 +207,7 @@ Row(
       ),
     ),
     const SizedBox(width: 12),
-    // Tombol Simpan / Update
+  
     Expanded(
       child: ElevatedButton(
         onPressed: isLoading ? null : simpan,

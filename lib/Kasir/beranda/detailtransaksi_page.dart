@@ -69,7 +69,7 @@ class DetailTransaksiPage extends StatelessWidget {
                 "Tanggal : ${DateFormat('yyyy-MM-dd').format(DateTime.parse(trx['created_at']))}",
               ),
               Text("Tipe Pesanan : ${trx['tipe_pesanan']}"),
-              Text("Meja : ${trx['meja'] ?? '-'}"),
+              Text("Meja : ${trx['meja']?['nomor_meja'] ?? '-'}"),
 
               const Divider(),
 

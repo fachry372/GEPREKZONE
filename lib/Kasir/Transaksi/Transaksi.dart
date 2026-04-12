@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Transaksi/dialog_pembayaran.dart';
+import 'package:geprekzone/Owner/log/logservice.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:geprekzone/auth/session.dart';
@@ -63,6 +64,7 @@ Future<void> getProduk() async {
   final response = await supabase
       .from('products')
       .select()
+      .eq('status', 'aktif')
       .order('id', ascending: true);
 
       for (var p in produk) {
@@ -109,45 +111,65 @@ if (userId == null) {
   return;
 }
 
-final trx = await supabase.from('transactions').insert({
-  "kode_transaksi": kode,
-  "id_users": userId, 
-  "id_meja": int.tryParse(widget.meja),
-  "total_harga": total,
-  "uang_bayar": bayar,
-  "uang_kembali": bayar - total,
-  "tipe_pesanan": widget.tipePesanan,
-}).select().single();
-
-final mejaId = int.tryParse(widget.meja);
-
-if (mejaId != null) {
-  await supabase
+final dataMeja = await supabase
       .from('meja')
-      .update({"status": "terisi"})
-      .eq('id', mejaId);
-}
+      .select('id')
+      .eq('nomor_meja', widget.meja) 
+      .maybeSingle();
 
+  final idmeja = dataMeja != null ? dataMeja['id'] : null;
+try {
 
-  int transaksiId = trx["id"];
+    final trx = await supabase.from('transactions').insert({
+      "kode_transaksi": kode,
+      "id_users": userId,
+      "id_meja": idmeja,
+      "total_harga": total,
+      "uang_bayar": bayar,
+      "uang_kembali": bayar - total,
+      "tipe_pesanan": widget.tipePesanan,
+    }).select().single();
 
-  
-  for (var item in items) {
-    await supabase.from('transaksi_detail').insert({
-      "id_transactions": transaksiId,
-      "id_products": item["id"],
-      "harga": item["harga"],
-      "jumlah": item["qty"],
-      "subtotal": item["qty"] * item["harga"],
-    });
+    int transaksiId = trx["id"];
 
     
-    await supabase.from('products').update({
-      "stok": item["stok"]
-    }).eq('id', item["id"]);
-  }
+    List<String> detailMenuLog = [];
+
+    for (var item in items) {
+      detailMenuLog.add("${item["nama_produk"]} (x${item["qty"]})");
+
+      await supabase.from('transaksi_detail').insert({
+        "id_transactions": transaksiId,
+        "id_products": item["id"],
+        "harga": item["harga"],
+        "jumlah": item["qty"],
+        "subtotal": item["qty"] * item["harga"],
+      });
+
+      await supabase.from('products').update({
+        "stok": item["stok"]
+      }).eq('id', item["id"]);
+    }
+
+
+    if (idmeja != null) {
+      await supabase.from('meja').update({"status": "terisi"}).eq('id', idmeja);
+    }
 
   
+    String infoMeja = widget.tipePesanan == "Makan di tempat" ? " di Meja ${widget.meja}" : "";
+    
+    await LogService.log(
+      "Transaksi Berhasil ($kode): ${detailMenuLog.join(', ')}. "
+      "Total: ${currencyFormatter.format(total)}$infoMeja."
+    );
+   
+
+  } catch (e) {
+    print("Error transaksi: $e");
+   
+    await LogService.log("Percobaan Transaksi GAGAL ($kode): $e");
+  }
 
   
 }
@@ -185,7 +207,7 @@ bool get isKeranjangValid {
 
   for (var p in itemsInCart) {
     if ((p["isOverStock"] ?? false) == true) {
-      return false; // disable tombol kalau ada yg melebihi stok
+      return false;
     }
   }
 
@@ -256,16 +278,19 @@ Text("Meja : ${widget.meja}"),
                     children: [
 
                       Expanded(
-                        child: item["image"] != null
-    ? Image.network(
-        item["image"],
-        width: double.infinity,
-        fit: BoxFit.cover,
-      )
-    : Container(
-        color: Colors.grey[300],
-        child: const Icon(Icons.fastfood),
-      )
+                        child: ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                          child: item["image"] != null
+                              ? Image.network(
+                                  item["image"],
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                )
+                              : Container(
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.fastfood),
+                                ),
+                        )
                       ),
 
                       Padding(
@@ -276,6 +301,8 @@ Text("Meja : ${widget.meja}"),
 
                             Text(
                               item["nama_produk"],
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                   fontWeight: FontWeight.bold),
                             ),
@@ -359,128 +386,138 @@ Text("Meja : ${widget.meja}"),
 
                 const Divider(),
 
-                ...produk.where((p) => p["qty"] > 0).map((p) {
+          
 
-  // pastikan setiap item punya controller
-  p["controller"] ??= TextEditingController(text: p["qty"].toString());
+                // 1. Bungkus dengan Container berbatas tinggi dan SingleChildScrollView
+                Container(
+                  constraints: const BoxConstraints(
+                    // Sesuaikan maxHeight (misal: 210) agar pas menampilkan ~3 item.
+                    // Jika 1 item tingginya sekitar 70, maka 70 * 3 = 210
+                    maxHeight: 210, 
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: produk.where((p) => p["qty"] > 0).map((p) {
+                        
+                        p["controller"] ??= TextEditingController(text: p["qty"].toString());
+                        double subtotal = p["qty"] * p["harga"];
 
-  double subtotal = p["qty"] * p["harga"];
+                        return Column(
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    p["nama_produk"],
+                                    // 2. Tambahkan maxLines dan overflow di sini
+                                    maxLines: 1, 
+                                    overflow: TextOverflow.ellipsis, 
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
 
-  return Column(
-    children: [
-      Row(
-        children: [
-          Expanded(
-            child: Text(
-              p["nama_produk"],
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.remove),
+                                      onPressed: () {
+                                        setState(() {
+                                          if (p["qty"] > 0) {
+                                            p["qty"]--;
+                                            p["stok"]++;
+                                            p["isOverStock"] = false;
+                                            p["controller"].text = p["qty"].toString();
+                                          }
+                                        });
+                                      },
+                                    ),
+                                    SizedBox(
+                                      width: 50,
+                                      child: TextFormField(
+                                        controller: p["controller"],
+                                        keyboardType: TextInputType.number,
+                                        textAlign: TextAlign.center,
+                                        decoration: const InputDecoration(
+                                          border: OutlineInputBorder(),
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                        ),
+                                        onChanged: (value) {
+                                          if (value.isEmpty) return;
 
-          Row(
-            children: [
-            
-              IconButton(
-                icon: const Icon(Icons.remove),
-               onPressed: () {
-  setState(() {
-    if (p["qty"] > 0) {
-      p["qty"]--;
-      p["stok"]++;
-      p["isOverStock"] = false;
-      p["controller"].text = p["qty"].toString();
-    }
-  });
-},
-              ),
+                                          int? inputQty = int.tryParse(value);
+                                          if (inputQty == null) return;
 
-             
-          SizedBox(
-  width: 50,
-  child: TextFormField(
-    controller: p["controller"],
-    keyboardType: TextInputType.number,
-    textAlign: TextAlign.center,
-    decoration: const InputDecoration(
-      border: OutlineInputBorder(),
-      isDense: true,
-      contentPadding: EdgeInsets.symmetric(vertical: 8),
-    ),
-onChanged: (value) {
-  if (value.isEmpty) return;
+                                          int maxQty = (p["stok"] ?? 0) + (p["qty"] ?? 0);
 
-  int? inputQty = int.tryParse(value);
-  if (inputQty == null) return;
+                                          setState(() {
+                                            if (inputQty > maxQty) {
+                                              p["qty"] = maxQty;
+                                              p["stok"] = 0;
+                                              p["isOverStock"] = false;
 
-  int maxQty = (p["stok"] ?? 0) + (p["qty"] ?? 0);
+                                              p["controller"].text = maxQty.toString();
+                                              p["controller"].selection = TextSelection.fromPosition(
+                                                TextPosition(offset: p["controller"].text.length),
+                                              );
 
-  setState(() {
-   if (inputQty > maxQty) {
-  p["qty"] = maxQty;
-  p["stok"] = 0;
-  p["isOverStock"] = false; 
+                                              ScaffoldMessenger.of(context).clearSnackBars();
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text("Maksimal stok: $maxQty")),
+                                              );
+                                            } else {
+                                              p["qty"] = inputQty;
+                                              p["stok"] = maxQty - inputQty;
+                                              p["isOverStock"] = false;
+                                            }
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.add),
+                                      onPressed: () {
+                                        setState(() {
+                                          if ((p["stok"] ?? 0) > 0) {
+                                            p["qty"]++;
+                                            p["stok"]--;
+                                            p["isOverStock"] = false;
+                                            p["controller"].text = p["qty"].toString();
+                                          } else {
+                                            ScaffoldMessenger.of(context).clearSnackBars();
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text("Stok habis")),
+                                            );
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
 
-  p["controller"].text = maxQty.toString();
-  p["controller"].selection = TextSelection.fromPosition(
-    TextPosition(offset: p["controller"].text.length),
-  );
+                                const SizedBox(width: 10),
+                                Text(currencyFormatter.format(subtotal)),
 
-  ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text("Maksimal stok: $maxQty")),
-  );
-}else {
-      p["qty"] = inputQty;
-      p["stok"] = maxQty - inputQty;
-      p["isOverStock"] = false;
-    }
-  });
-},
-  ),
-),
-
-              
-              IconButton(
-                icon: const Icon(Icons.add),
-              onPressed: () {
-  setState(() {
-    if ((p["stok"] ?? 0) > 0) {
-      p["qty"]++;
-      p["stok"]--;
-      p["isOverStock"] = false;
-      p["controller"].text = p["qty"].toString();
-    } else {
-      ScaffoldMessenger.of(context).clearSnackBars();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Stok habis")),
-      );
-    }
-  });
-},
-              ),
-            ],
-          ),
-
-          const SizedBox(width: 10),
-          Text(currencyFormatter.format(subtotal)),
-
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: () {
-              setState(() {
-                p["stok"] += p["qty"];
-                p["qty"] = 0;
-                p["isOverStock"] = false;
-                p["controller"].text = "0";
-              });
-            },
-          ),
-        ],
-      ),
-      const Divider(),
-    ],
-  );
-}),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () {
+                                    setState(() {
+                                      p["stok"] += p["qty"];
+                                      p["qty"] = 0;
+                                      p["isOverStock"] = false;
+                                      p["controller"].text = "0";
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                            const Divider(),
+                          ],
+                        );
+                      }).toList(), // Jangan lupa tambahkan .toList() di akhir map
+                    ),
+                  ),
+                ),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
