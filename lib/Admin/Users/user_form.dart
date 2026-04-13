@@ -242,19 +242,19 @@ class _UserFormState extends State<UserForm> {
                     borderRadius: BorderRadius.circular(12),
                   ),
 
-                  // 👁️ toggle password
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        obscurePassword = !obscurePassword;
-                      });
-                    },
-                  ),
+                 
+                  // suffixIcon: IconButton(
+                  //   icon: Icon(
+                  //     obscurePassword
+                  //         ? Icons.visibility_off
+                  //         : Icons.visibility,
+                  //   ),
+                  //   onPressed: () {
+                  //     setState(() {
+                  //       obscurePassword = !obscurePassword;
+                  //     });
+                  //   },
+                  // ),
                 ),
               ),
             ),
