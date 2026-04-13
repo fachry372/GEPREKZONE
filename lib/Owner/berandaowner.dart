@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/Kasir/Transaksi/Transaksi.dart';
 import 'package:geprekzone/Owner/owner_drawer.dart';
 import 'package:geprekzone/auth/session.dart';
+import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
@@ -20,7 +22,7 @@ class _OwnerPageState extends State<OwnerPage> {
   final supabase = Supabase.instance.client;
 
   int totalTransaksi = 0;
-String pendapatan = "Rp 0";
+double pendapatan =0;
 int totalMenu = 0;
 int logAktivitas = 0;
 
@@ -58,7 +60,7 @@ if (!mounted) return;
 
     setState(() {
       totalTransaksi = transaksiRes.length;
-      pendapatan = "Rp ${totalPendapatan.toStringAsFixed(0)}";
+      pendapatan =  totalPendapatan;
       totalMenu = produkRes.length;
       logAktivitas = logRes.length;
     });
@@ -73,6 +75,15 @@ if (!mounted) return;
   });
 }
 
+ String rupiah(num angka) {
+    final format = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
+    return format.format(angka);
+  }
+
 @override
 void initState() {
   super.initState();
@@ -81,6 +92,8 @@ void initState() {
   });
   getDashboardData();
 }
+
+
 
   Widget infoCard(
     IconData icon,
@@ -174,7 +187,7 @@ void initState() {
                     children: [
 
                       infoCard(Icons.receipt, "Transaksi Hari Ini", "$totalTransaksi"),
-                      infoCard(Icons.payment, "Pendapatan Hari Ini", pendapatan),
+                      infoCard(Icons.payment, "Pendapatan Hari Ini", currencyFormatter.format(pendapatan)),
                       infoCard(Icons.fastfood, "Total Menu", "$totalMenu"),
                       infoCard(Icons.history, "Log Aktivitas", "$logAktivitas"),
 

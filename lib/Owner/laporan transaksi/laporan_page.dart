@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Owner/laporan%20transaksi/Detail_laporan.dart';
+import 'package:geprekzone/Owner/owner_drawer.dart';
 import 'package:geprekzone/auth/session.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
@@ -264,12 +265,23 @@ bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+    drawer: OwnerDrawer(),
       backgroundColor: const Color(0xfff2f2f2),
 
       appBar: AppBar(
         backgroundColor: Colors.red,
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
+       iconTheme: IconThemeData(color: Colors.white),
+  //      leading: Builder(
+  //   builder: (context) {
+  //     return IconButton(
+  //       icon: const Icon(Icons.menu_open, color: Colors.white), 
+  //       onPressed: () {
+  //         Scaffold.of(context).openDrawer(); 
+  //       },
+  //     );
+  //   },
+  // ),
         title: const Text(
           "Laporan Transaksi",
           style: TextStyle(color: Colors.white),

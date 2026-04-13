@@ -24,162 +24,240 @@ class PembayaranDialog extends StatefulWidget {
 }
 
 class _PembayaranDialogState extends State<PembayaranDialog> {
-
-   @override
+  @override
   void initState() {
     super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    UserSession.cekAkses(context, ['kasir']);
-  });
-}
-
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      UserSession.cekAkses(context, ['kasir']);
+    });
+  }
 
   final currencyFormatter = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
-
   final bayarController = TextEditingController();
   final kembaliController = TextEditingController();
   double kembalian = 0;
+  String? errorBayar;
+  bool isLoading = false;
+
+  InputDecoration inputStyle(String label) {
+    return InputDecoration(
+      labelText: label,
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final totalController =
-        TextEditingController(text: currencyFormatter.format(widget.total));
+    final totalController = TextEditingController(
+      text: currencyFormatter.format(widget.total),
+    );
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      title: const Text(
-        "Pembayaran",
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          color: Colors.red,
-        ),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+      contentPadding: const EdgeInsets.all(20),
       content: StatefulBuilder(
         builder: (context, setStateDialog) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Total
-              TextFormField(
-                controller: totalController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: "Total",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Pembayaran",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 15),
+                const SizedBox(height: 20),
 
-              // Nominal Bayar
-              TextFormField(
-                controller: bayarController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: "Nominal Bayar",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                TextFormField(
+                  controller: totalController,
+                  readOnly: true,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  decoration: inputStyle(
+                    "Total",
+                  ).copyWith(filled: true, fillColor: Colors.grey[200]),
                 ),
-                onChanged: (value) {
-                  String numericString = value.replaceAll(RegExp(r'[^0-9]'), '');
-                  double bayar = double.tryParse(numericString) ?? 0;
+                const SizedBox(height: 12),
 
-                  setStateDialog(() {
-                    kembalian = bayar - widget.total;
-                    kembaliController.text =
-                        kembalian >= 0 ? currencyFormatter.format(kembalian) : "";
-                  });
+                TextFormField(
+                  controller: bayarController,
+                  keyboardType: TextInputType.number,
+                  autofocus: true,
 
-                  bayarController.value = TextEditingValue(
-                    text: currencyFormatter.format(bayar),
-                    selection: TextSelection.collapsed(
-                        offset: currencyFormatter.format(bayar).length),
-                  );
-                },
-              ),
-              const SizedBox(height: 15),
+                  decoration: inputStyle(
+                    "Nominal Bayar",
+                  ).copyWith(errorText: errorBayar),
+                  onChanged: (value) {
+                    String numericString = value.replaceAll(
+                      RegExp(r'[^0-9]'),
+                      '',
+                    );
+                    double bayar = double.tryParse(numericString) ?? 0;
 
-              // Kembalian
-              TextFormField(
-                controller: kembaliController,
-                readOnly: true,
-                decoration: InputDecoration(
-                  labelText: "Kembalian",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                    setStateDialog(() {
+                      if (bayar >= widget.total) {
+                        errorBayar = null;
+                      }
+
+                      kembalian = bayar - widget.total;
+                      kembaliController.text = kembalian >= 0
+                          ? currencyFormatter.format(kembalian)
+                          : "";
+                    });
+
+                    bayarController.value = TextEditingValue(
+                      text: currencyFormatter.format(bayar),
+                      selection: TextSelection.collapsed(
+                        offset: currencyFormatter.format(bayar).length,
+                      ),
+                    );
+                  },
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+
+                TextFormField(
+                  controller: kembaliController,
+                  readOnly: true,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    // color: kembalian >= 0 ? Colors.green : Colors.red,
+                  ),
+                  decoration: inputStyle(
+                    "Kembalian",
+                  ).copyWith(filled: true, fillColor: Colors.grey[200]),
+                ),
+                const SizedBox(height: 20),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () => Navigator.pop(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color.fromARGB(
+                            255,
+                            235,
+                            212,
+                            214,
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "Batal",
+                          style: TextStyle(color: Colors.black87),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                double bayar =
+                                    double.tryParse(
+                                      bayarController.text.replaceAll(
+                                        RegExp(r'[^0-9]'),
+                                        '',
+                                      ),
+                                    ) ??
+                                    0;
+
+                                if (bayar < widget.total) {
+                                  setStateDialog(() {
+                                    errorBayar = "Uang tidak cukup!";
+                                  });
+                                  return;
+                                }
+                                setStateDialog(() => isLoading = true);
+
+                                try {
+                                  await widget.onSimpan(bayar);
+
+                                  if (!context.mounted) return;
+                                  Navigator.pop(context);
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Transaksi berhasil!"),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => StrukPage(
+                                        produk: widget.produk,
+                                        total: widget.total,
+                                        bayar: bayar,
+                                        kembali: kembalian,
+                                        tipe: widget.tipePesanan,
+                                        meja:
+                                            (widget.tipePesanan ==
+                                                    "Take Away" ||
+                                                widget.meja == null)
+                                            ? "-"
+                                            : widget.meja!,
+                                        kodeTransaksi:
+                                            "TRX${DateTime.now().millisecondsSinceEpoch}",
+                                        tanggal: DateFormat(
+                                          'dd/MM/yyyy HH:mm',
+                                        ).format(DateTime.now()),
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  setStateDialog(() => isLoading = false);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text("Terjadi kesalahan: $e"),
+                                    ),
+                                  );
+                                }
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                "Selesai",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           );
         },
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("Batal"),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.red,
-          ),
-          onPressed: () async {
-            double bayar = double.tryParse(
-                    bayarController.text.replaceAll(RegExp(r'[^0-9]'), '')) ??
-                0;
-            kembalian = bayar - widget.total;
-
-            if (bayar < widget.total) {
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Uang tidak cukup")),
-              );
-              return;
-            }
-
-          
-            await widget.onSimpan(bayar);
-
-          
-            Navigator.pop(context);
-
-  ScaffoldMessenger.of(context).clearSnackBars();
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text("Transaksi berhasil!"),
-      backgroundColor: Colors.green,
-    ),
-  );
-          
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => StrukPage(
-                  produk: widget.produk,
-                  total: widget.total,
-                  bayar: bayar,
-                  kembali: kembalian,
-                  tipe: widget.tipePesanan,
-                  meja: widget.meja,
-                  kodeTransaksi: "TRX${DateTime.now().millisecondsSinceEpoch}",
-                  tanggal: DateTime.now().toString(),
-                ),
-              ),
-            ).then((value) {
-              // bisa panggil resetKeranjang di parent
-            });
-          },
-          child: const Text("Selesai", style: TextStyle(color: Colors.white)),
-        ),
-      ],
     );
   }
 }

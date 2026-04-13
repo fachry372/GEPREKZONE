@@ -111,13 +111,27 @@ if (userId == null) {
   return;
 }
 
-final dataMeja = await supabase
+int? idmeja; 
+
+
+if (widget.tipePesanan != "Take Away" && 
+    widget.meja != "-" && 
+    widget.meja.isNotEmpty) {
+    
+  final dataMeja = await supabase
       .from('meja')
       .select('id')
-      .eq('nomor_meja', widget.meja) 
+      .eq('nomor_meja', widget.meja)
       .maybeSingle();
+      
+  if (dataMeja != null) {
+    idmeja = dataMeja['id'];
+  }
+} else {
+  idmeja = null; 
+}
 
-  final idmeja = dataMeja != null ? dataMeja['id'] : null;
+ 
 try {
 
     final trx = await supabase.from('transactions').insert({
@@ -388,11 +402,9 @@ Text("Meja : ${widget.meja}"),
 
           
 
-                // 1. Bungkus dengan Container berbatas tinggi dan SingleChildScrollView
                 Container(
                   constraints: const BoxConstraints(
-                    // Sesuaikan maxHeight (misal: 210) agar pas menampilkan ~3 item.
-                    // Jika 1 item tingginya sekitar 70, maka 70 * 3 = 210
+                    
                     maxHeight: 210, 
                   ),
                   child: SingleChildScrollView(
@@ -409,7 +421,7 @@ Text("Meja : ${widget.meja}"),
                                 Expanded(
                                   child: Text(
                                     p["nama_produk"],
-                                    // 2. Tambahkan maxLines dan overflow di sini
+                                   
                                     maxLines: 1, 
                                     overflow: TextOverflow.ellipsis, 
                                     style: const TextStyle(fontWeight: FontWeight.w600),
@@ -514,7 +526,7 @@ Text("Meja : ${widget.meja}"),
                             const Divider(),
                           ],
                         );
-                      }).toList(), // Jangan lupa tambahkan .toList() di akhir map
+                      }).toList(),
                     ),
                   ),
                 ),

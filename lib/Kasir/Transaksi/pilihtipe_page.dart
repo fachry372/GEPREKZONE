@@ -72,7 +72,7 @@ class _PilihTipePageState extends State<PilihTipePage> {
 
             const SizedBox(width: 30),
 
-            /// TAKE AWAY
+           
             tipeButton(
               context,
               "Take Away",
