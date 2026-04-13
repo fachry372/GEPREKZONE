@@ -188,7 +188,7 @@ void initState() {
 
                       infoCard(Icons.receipt, "Transaksi Hari Ini", "$totalTransaksi"),
                       infoCard(Icons.payment, "Pendapatan Hari Ini", currencyFormatter.format(pendapatan)),
-                      infoCard(Icons.fastfood, "Total Menu", "$totalMenu"),
+                      infoCard(Icons.restaurant_menu, "Total Menu", "$totalMenu"),
                       infoCard(Icons.history, "Log Aktivitas", "$logAktivitas"),
 
                     ],

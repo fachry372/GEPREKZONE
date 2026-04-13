@@ -196,7 +196,7 @@ if (!mounted) return;
                       ),
 
                       infoCard(
-                        Icons.fastfood,
+                        Icons.restaurant_menu,
                         "Jumlah Menu",
                         "$menuTerjual",
                         () {
