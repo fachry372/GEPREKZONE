@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/splashscreen.dart';
 import 'login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

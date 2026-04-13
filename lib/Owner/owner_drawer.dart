@@ -3,6 +3,7 @@ import 'package:geprekzone/Owner/berandaowner.dart';
 import 'package:geprekzone/Owner/data%20menu/daftar_menu.dart';
 import 'package:geprekzone/Owner/laporan%20transaksi/laporan_page.dart';
 import 'package:geprekzone/Owner/log/Log_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:geprekzone/login_page.dart';
 
 class OwnerDrawer extends StatelessWidget {
@@ -10,11 +11,13 @@ class OwnerDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    String tampilanNama = UserSession.nama ?? UserSession.username ?? "Owner";
+    
     return Drawer(
       child: ListView(
         children: [
 
-      
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
             decoration: const BoxDecoration(
@@ -23,19 +26,22 @@ class OwnerDrawer extends StatelessWidget {
               ),
             ),
             child: Row(
-              children: const [
-                CircleAvatar(
+              children: [
+                const CircleAvatar(
                   radius: 20,
                   backgroundColor: Colors.white,
                   child: Icon(Icons.person, color: Colors.red, size: 20),
                 ),
-                SizedBox(width: 10),
-                Text(
-                  "Owner GeprekZone",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    tampilanNama, 
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis, // Tambahkan titik-titik jika teks terlalu panjang
                   ),
                 )
               ],
@@ -84,6 +90,7 @@ class OwnerDrawer extends StatelessWidget {
             leading: const Icon(Icons.logout),
             title: const Text("Logout"),
             onTap: () {
+              UserSession.hapusSession();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => LoginPage()),

@@ -3,6 +3,7 @@ import 'package:geprekzone/Admin/admin_page.dart';
 import 'package:geprekzone/Admin/Meja/kelola_meja_page.dart';
 import 'package:geprekzone/Admin/Menu/kelola_produk_page.dart';
 import 'package:geprekzone/Admin/Users/kelola_user_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import 'package:geprekzone/login_page.dart';
 
 class AdminDrawer extends StatelessWidget {
@@ -10,10 +11,11 @@ class AdminDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String tampilanNama = UserSession.nama ?? UserSession.username ?? "Admin";
     return Drawer(
       child: ListView(
         children: [
-          /// HEADER
+          
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 30),
             decoration: const BoxDecoration(
@@ -21,7 +23,7 @@ class AdminDrawer extends StatelessWidget {
                 colors: [Color(0xffe51c23), Color(0xffb31217)],
               ),
             ),
-            child: const Row(
+            child:  Row(
               children: [
                 CircleAvatar(
                   radius: 20,
@@ -29,12 +31,15 @@ class AdminDrawer extends StatelessWidget {
                   child: Icon(Icons.person, color: Colors.red, size: 20),
                 ),
                 SizedBox(width: 10),
-                Text(
-                  "Admin GeprekZone",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
+                Expanded(
+                  child: Text(
+                    tampilanNama, 
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 )
               ],
@@ -92,11 +97,12 @@ class AdminDrawer extends StatelessWidget {
 
           const Divider(),
 
-          /// LOGOUT
+      
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text("Logout"),
             onTap: () {
+              UserSession.hapusSession();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(

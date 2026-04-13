@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:geprekzone/Kasir/Aturmeja/atur_meja_page.dart';
 import 'package:geprekzone/Kasir/Transaksi/pilihtipe_page.dart';
+import 'package:geprekzone/Kasir/beranda/Riwayat_page.dart';
 import 'package:geprekzone/Kasir/beranda/kasir_home_page.dart';
+import 'package:geprekzone/auth/session.dart';
 import '../login_page.dart';
 
 class KasirDrawer extends StatelessWidget {
@@ -9,6 +11,9 @@ class KasirDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    String tampilanNama = UserSession.username ?? "kasir";
+    
     return Drawer(
       child: ListView(
         children: [
@@ -17,7 +22,7 @@ class KasirDrawer extends StatelessWidget {
             decoration: const BoxDecoration(
               gradient: LinearGradient(colors: [Color(0xffe51c23), Color(0xffb31217)]),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 CircleAvatar(
                   radius: 20,
@@ -25,9 +30,16 @@ class KasirDrawer extends StatelessWidget {
                   child: Icon(Icons.person, color: Colors.red),
                 ),
                 SizedBox(width: 10),
-                Text(
-                  "Kasir GeprekZone",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                Expanded(
+                  child: Text(
+                    tampilanNama, 
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis, 
+                  ),
                 )
               ],
             ),
@@ -65,11 +77,22 @@ class KasirDrawer extends StatelessWidget {
               );
             },
           ),
+           ListTile(
+            leading: const Icon(Icons.receipt),
+            title: const Text("Riwayat Transaksi"),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const RiwayatTransaksiPage()),
+              );
+            },
+          ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout),
             title: const Text("Logout"),
             onTap: () {
+              UserSession.hapusSession();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => LoginPage()),

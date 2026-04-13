@@ -221,44 +221,50 @@ if (!mounted) return;
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 10),
-                      ],
-                    ),
-                    child: stokMenipis.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.all(20.0),
-                            child: Text("Semua stok aman"),
-                          )
-                        : Column(
-                            children: stokMenipis.map((item) {
-                              return ListTile(
-                                leading: Icon(
-                                  Icons.warning_amber_rounded,
-                                  color: (item['stok'] < 3)
-                                      ? Colors.red
-                                      : Colors.orange,
-                                ),
-                                title: Text(
-                                  item['nama_produk'] ?? "Tanpa Nama",
-                                ),
-                                trailing: Text(
-                                  "Stok: ${item['stok']}",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: (item['stok'] < 3)
-                                        ? Colors.red
-                                        : Colors.orange,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
+           
+Container(
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(15),
+    boxShadow: const [
+      BoxShadow(color: Colors.black12, blurRadius: 10),
+    ],
+  ),
+  child: stokMenipis.isEmpty
+      ? const Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Text("Semua stok aman"),
+        )
+      : Column(
+          children: stokMenipis.take(5).map((item) {
+            final int index = stokMenipis.indexOf(item);
+            return Column(
+              children: [
+                ListTile(
+                  leading: Icon(
+                    Icons.warning,
+                    color:  Colors.red,
                   ),
+                  title: Text(
+                    item['nama_produk'] ?? "Tanpa Nama",
+                  ),
+                  trailing: Text(
+                    "Stok: ${item['stok']}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                       color:  Colors.red,
+                      // color: (item['stok'] < 3) ? Colors.red : Colors.orange,
+                    ),
+                  ),
+                ),
+               
+                if (index < stokMenipis.take(5).length - 1)
+                  const Divider(height: 1, thickness: 1, indent: 16, endIndent: 16),
+              ],
+            );
+          }).toList(),
+        ),
+),
                 ],
               ),
             ),
