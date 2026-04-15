@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geprekzone/splashscreen.dart';
 import 'login_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -27,15 +28,13 @@ class MyApp extends StatelessWidget {
         primaryColor: Colors.red,
       ),
 
-     
-      initialRoute: '/login', 
-      
-     
+      home: SplashScreen(),
+    
       routes: {
         '/login': (context) => const LoginPage(),
        
       },
-      home: LoginPage(),
+     
     );
   }
 }

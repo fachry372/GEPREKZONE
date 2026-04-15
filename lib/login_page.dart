@@ -116,6 +116,7 @@ Navigator.pushReplacement(
 
               Image.asset(
                 "assets/logo.png",
+                
                 height: 120,
               ),
 
