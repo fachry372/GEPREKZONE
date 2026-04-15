@@ -233,7 +233,7 @@ bool get isKeranjangValid {
   Widget build(BuildContext context) {
 
     return Scaffold(
-
+        
       appBar: AppBar(
         backgroundColor: Colors.red,
         centerTitle: true,
@@ -243,345 +243,352 @@ bool get isKeranjangValid {
         title: const Text("Kasir GeprekZone",style: TextStyle(color: Colors.white),),
       ),
 
-      body: Column(
-        children: [
-
-         
-          Container(
-            padding: const EdgeInsets.all(10),
-            color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Tipe : ${widget.tipePesanan}"),
-Text("Meja : ${widget.meja}"),
-              ],
-            ),
-          ),
-
-          
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(
-              children: [
-                filterButton("Semua"),
-                filterButton("Makanan"),
-                filterButton("Minuman"),
-              ],
-            ),
-          ),
-
-          
-          Expanded(
-            child: GridView.builder(
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+        
+           
+            Container(
               padding: const EdgeInsets.all(10),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-                childAspectRatio: 0.8,
+              color: Colors.grey[200],
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Tipe : ${widget.tipePesanan}"),
+        Text("Meja : ${widget.meja}"),
+                ],
               ),
-              itemCount: produkFilter.length,
-              itemBuilder: (context, index) {
-
-                var item = produkFilter[index];
-
-                return Card(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                          child: item["image"] != null
-                              ? Image.network(
-                                  item["image"],
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                )
-                              : Container(
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.fastfood),
-                                ),
-                        )
-                      ),
-
-                      Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-
-                            Text(
-                              item["nama_produk"],
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold),
-                            ),
-
-                          Text(currencyFormatter.format(item["harga"])),
-
-                           Text("Stok : ${item["stok"] ?? 0}"),
-
-                            const SizedBox(height: 5),
-
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red
-                                ),
-                              onPressed: () {
-  setState(() {
-    if ((item["stok"] ?? 0) > 0) {
-      item["qty"]++;
-      item["stok"]--;
-      item["controller"].text = item["qty"].toString();
-    } else {
-      ScaffoldMessenger.of(context).clearSnackBars(); 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Stok habis")),
-      );
-    }
-  });
-},
-                                child: const Text("+ Keranjang",style: TextStyle(color: Colors.white),),
-                              ),
-                            )
-
-                          ],
-                        ),
-                      )
-
-                    ],
-                  ),
-                );
-              },
             ),
-          ),
-
-          
-          Container(
-            padding: const EdgeInsets.all(10),
-            color: Colors.white,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-
-                    const Text(
-                      "Keranjang",
-                      style: TextStyle(
-                          fontSize:18,
-                          fontWeight: FontWeight.bold),
-                    ),
-
-                    TextButton(
-                        onPressed: (){
-                          setState(() {
-                            for (var p in produk) {
-                              p["stok"] += p["qty"];
-                              p["qty"] = 0;
-                                  p["isOverStock"] = false; 
-    p["controller"].text = "0";
-                            }
-                          });
-                        },
-                        child: const Text("Hapus Semua",style: TextStyle(color: Colors.red),)
-                    )
-
-                  ],
+        
+            
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  filterButton("Semua"),
+                  filterButton("Makanan"),
+                  filterButton("Minuman"),
+                ],
+              ),
+            ),
+        
+            
+            Expanded(
+              child: GridView.builder(
+                padding: const EdgeInsets.all(10),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  childAspectRatio: 0.8,
                 ),
-
-                const Divider(),
-
-          
-
-                Container(
-                  constraints: const BoxConstraints(
-                    
-                    maxHeight: 210, 
-                  ),
-                  child: SingleChildScrollView(
+                itemCount: produkFilter.length,
+                itemBuilder: (context, index) {
+        
+                  var item = produkFilter[index];
+        
+                  return Card(
                     child: Column(
-                      children: produk.where((p) => p["qty"] > 0).map((p) {
-                        
-                        p["controller"] ??= TextEditingController(text: p["qty"].toString());
-                        double subtotal = p["qty"] * p["harga"];
-
-                        return Column(
-                          children: [
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    p["nama_produk"],
-                                   
-                                    maxLines: 1, 
-                                    overflow: TextOverflow.ellipsis, 
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+        
+                        Expanded(
+                          child: ClipRRect(
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                            child: item["image"] != null
+                                ? Image.network(
+                                    item["image"],
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Container(
+                                    color: Colors.grey[300],
+                                    child: const Icon(Icons.fastfood),
                                   ),
+                          )
+                        ),
+        
+                        Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+        
+                              Text(
+                                item["nama_produk"],
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+        
+                            Text(currencyFormatter.format(item["harga"])),
+        
+                             Text("Stok : ${item["stok"] ?? 0}"),
+        
+                              const SizedBox(height: 5),
+        
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red
+                                  ),
+                                onPressed: () {
+          setState(() {
+            if ((item["stok"] ?? 0) > 0) {
+        item["qty"]++;
+        item["stok"]--;
+        item["controller"].text = item["qty"].toString();
+            } else {
+        ScaffoldMessenger.of(context).clearSnackBars(); 
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Stok habis")),
+        );
+            }
+          });
+        },
+                                  child: const Text("+ Keranjang",style: TextStyle(color: Colors.white),),
                                 ),
-
+                              )
+        
+                            ],
+                          ),
+                        )
+        
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        
+            
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                color: Colors.white,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                      
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                      
+                        const Text(
+                          "Keranjang",
+                          style: TextStyle(
+                              fontSize:18,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      
+                        TextButton(
+                            onPressed: (){
+                              setState(() {
+                                for (var p in produk) {
+                                  p["stok"] += p["qty"];
+                                  p["qty"] = 0;
+                                      p["isOverStock"] = false; 
+              p["controller"].text = "0";
+                                }
+                              });
+                            },
+                            child: const Text("Hapus Semua",style: TextStyle(color: Colors.red),)
+                        )
+                      
+                      ],
+                    ),
+                      
+                    const Divider(),
+                      
+              
+                      
+                    Container(
+                      constraints: const BoxConstraints(
+                        
+                        maxHeight: 145, 
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: produk.where((p) => p["qty"] > 0).map((p) {
+                            
+                            p["controller"] ??= TextEditingController(text: p["qty"].toString());
+                            double subtotal = p["qty"] * p["harga"];
+                      
+                            return Column(
+                              children: [
                                 Row(
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove),
-                                      onPressed: () {
-                                        setState(() {
-                                          if (p["qty"] > 0) {
-                                            p["qty"]--;
-                                            p["stok"]++;
-                                            p["isOverStock"] = false;
-                                            p["controller"].text = p["qty"].toString();
-                                          }
-                                        });
-                                      },
-                                    ),
-                                    SizedBox(
-                                      width: 50,
-                                      child: TextFormField(
-                                        controller: p["controller"],
-                                        keyboardType: TextInputType.number,
-                                        textAlign: TextAlign.center,
-                                        decoration: const InputDecoration(
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(vertical: 8),
-                                        ),
-                                        onChanged: (value) {
-                                          if (value.isEmpty) return;
-
-                                          int? inputQty = int.tryParse(value);
-                                          if (inputQty == null) return;
-
-                                          int maxQty = (p["stok"] ?? 0) + (p["qty"] ?? 0);
-
-                                          setState(() {
-                                            if (inputQty > maxQty) {
-                                              p["qty"] = maxQty;
-                                              p["stok"] = 0;
-                                              p["isOverStock"] = false;
-
-                                              p["controller"].text = maxQty.toString();
-                                              p["controller"].selection = TextSelection.fromPosition(
-                                                TextPosition(offset: p["controller"].text.length),
-                                              );
-
-                                              ScaffoldMessenger.of(context).clearSnackBars();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text("Maksimal stok: $maxQty")),
-                                              );
-                                            } else {
-                                              p["qty"] = inputQty;
-                                              p["stok"] = maxQty - inputQty;
-                                              p["isOverStock"] = false;
-                                            }
-                                          });
-                                        },
+                                    Expanded(
+                                      child: Text(
+                                        p["nama_produk"],
+                                       
+                                        maxLines: 1, 
+                                        overflow: TextOverflow.ellipsis, 
+                                        style: const TextStyle(fontWeight: FontWeight.w600),
                                       ),
                                     ),
+                      
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.remove),
+                                          onPressed: () {
+                                            setState(() {
+                                              if (p["qty"] > 0) {
+                                                p["qty"]--;
+                                                p["stok"]++;
+                                                p["isOverStock"] = false;
+                                                p["controller"].text = p["qty"].toString();
+                                              }
+                                            });
+                                          },
+                                        ),
+                                        SizedBox(
+                                          width: 50,
+                                          child: TextFormField(
+                                            controller: p["controller"],
+                                            keyboardType: TextInputType.number,
+                                            textAlign: TextAlign.center,
+                                            decoration: const InputDecoration(
+                                              border: OutlineInputBorder(),
+                                              isDense: true,
+                                              contentPadding: EdgeInsets.symmetric(vertical: 8),
+                                            ),
+                                            onChanged: (value) {
+                                              if (value.isEmpty) return;
+                      
+                                              int? inputQty = int.tryParse(value);
+                                              if (inputQty == null) return;
+                      
+                                              int maxQty = (p["stok"] ?? 0) + (p["qty"] ?? 0);
+                      
+                                              setState(() {
+                                                if (inputQty > maxQty) {
+                                                  p["qty"] = maxQty;
+                                                  p["stok"] = 0;
+                                                  p["isOverStock"] = false;
+                      
+                                                  p["controller"].text = maxQty.toString();
+                                                  p["controller"].selection = TextSelection.fromPosition(
+                                                    TextPosition(offset: p["controller"].text.length),
+                                                  );
+                      
+                                                  ScaffoldMessenger.of(context).clearSnackBars();
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text("Maksimal stok: $maxQty")),
+                                                  );
+                                                } else {
+                                                  p["qty"] = inputQty;
+                                                  p["stok"] = maxQty - inputQty;
+                                                  p["isOverStock"] = false;
+                                                }
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(Icons.add),
+                                          onPressed: () {
+                                            setState(() {
+                                              if ((p["stok"] ?? 0) > 0) {
+                                                p["qty"]++;
+                                                p["stok"]--;
+                                                p["isOverStock"] = false;
+                                                p["controller"].text = p["qty"].toString();
+                                              } else {
+                                                ScaffoldMessenger.of(context).clearSnackBars();
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  const SnackBar(content: Text("Stok habis")),
+                                                );
+                                              }
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                      
+                                    const SizedBox(width: 10),
+                                    Text(currencyFormatter.format(subtotal)),
+                      
                                     IconButton(
-                                      icon: const Icon(Icons.add),
+                                      icon: const Icon(Icons.delete, color: Colors.red),
                                       onPressed: () {
                                         setState(() {
-                                          if ((p["stok"] ?? 0) > 0) {
-                                            p["qty"]++;
-                                            p["stok"]--;
-                                            p["isOverStock"] = false;
-                                            p["controller"].text = p["qty"].toString();
-                                          } else {
-                                            ScaffoldMessenger.of(context).clearSnackBars();
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text("Stok habis")),
-                                            );
-                                          }
+                                          p["stok"] += p["qty"];
+                                          p["qty"] = 0;
+                                          p["isOverStock"] = false;
+                                          p["controller"].text = "0";
                                         });
                                       },
                                     ),
                                   ],
                                 ),
-
-                                const SizedBox(width: 10),
-                                Text(currencyFormatter.format(subtotal)),
-
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                  onPressed: () {
-                                    setState(() {
-                                      p["stok"] += p["qty"];
-                                      p["qty"] = 0;
-                                      p["isOverStock"] = false;
-                                      p["controller"].text = "0";
-                                    });
-                                  },
-                                ),
+                                const Divider(),
                               ],
-                            ),
-                            const Divider(),
-                          ],
-                        );
-                      }).toList(),
+                            );
+                          }).toList(),
+                        ),
+                      ),
                     ),
-                  ),
+                      
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Total",
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize:16),
+                        ),
+                        Text(currencyFormatter.format(total),
+                        style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16),
+                      ),
+                      ],
+                      
+                    ),
+                      
+                      if (!isKeranjangValid)
+                      
+                    const SizedBox(height:10),
+                      
+                    SizedBox(
+                        width: double.infinity,
+                        child:ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+              backgroundColor: isKeranjangValid ? Colors.red : Colors.grey,
+                        ),
+                        onPressed: isKeranjangValid
+                      ? () {
+              showDialog(
+                context: context,
+                builder: (context) => PembayaranDialog(
+                  total: total,
+                  produk: produk,
+                  tipePesanan: widget.tipePesanan,
+                  meja: widget.meja,
+                  onSimpan: simpanTransaksi,
                 ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      "Total",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize:16),
-                    ),
-                    Text(currencyFormatter.format(total),
-  style: const TextStyle(
-    fontWeight: FontWeight.bold,
-    fontSize: 16),
-),
+              );
+                        }
+                      : null, 
+                        child: const Text("BAYAR", style: TextStyle(color: Colors.white)),
+                      ),
+                      ),
+                      
                   ],
-                  
                 ),
-
-if (!isKeranjangValid)
-
-                const SizedBox(height:10),
-
-                SizedBox(
-  width: double.infinity,
-  child:ElevatedButton(
-  style: ElevatedButton.styleFrom(
-    backgroundColor: isKeranjangValid ? Colors.red : Colors.grey,
-  ),
-  onPressed: isKeranjangValid
-      ? () {
-          showDialog(
-            context: context,
-            builder: (context) => PembayaranDialog(
-              total: total,
-              produk: produk,
-              tipePesanan: widget.tipePesanan,
-              meja: widget.meja,
-              onSimpan: simpanTransaksi,
-            ),
-          );
-        }
-      : null, 
-  child: const Text("BAYAR", style: TextStyle(color: Colors.white)),
-),
-),
-
-              ],
-            ),
-          )
-
-        ],
+              ),
+            )
+        
+          ],
+        ),
       ),
     );
   }

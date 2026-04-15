@@ -28,12 +28,13 @@ bool isLoading = false;
     WidgetsBinding.instance.addPostFrameCallback((_) {
     UserSession.cekAkses(context, ['kasir']);
   });
+ 
     getData();
   }
 
   Future<void> getData() async {
   setState(() {
-    isLoading = true;
+    isLoading = true; 
   });
 
   try {

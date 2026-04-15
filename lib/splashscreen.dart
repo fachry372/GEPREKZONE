@@ -45,30 +45,15 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
           
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Colors.white, 
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: ClipOval(
-                child: Padding(
-                  padding: const EdgeInsets.all(15.0), 
-                  child: Image.asset(
-                    "assets/logo.png",
-                    fit: BoxFit.contain, 
-                  ),
-                ),
-              ),
-            ),
+           const Text(
+  "GeprekZone",
+  style: TextStyle(
+    fontSize: 36,
+    fontWeight: FontWeight.bold,
+    color: Colors.white,
+    letterSpacing: 2,
+  ),
+),
             const SizedBox(height: 30),
             const CircularProgressIndicator(
               color: Colors.white,
